@@ -16,12 +16,14 @@ better abstracting and handling of HAL-like API responses, plus just all the oth
 """
 import json
 import logging
-
-import requests
-from requests import Request
 import pysolr
 import os
+import requests
+
+from requests import Request
+from dotenv import load_dotenv
 from uuid import UUID
+
 from .models import *
 
 __all__ = ['DSpaceClient']
@@ -53,25 +55,17 @@ class DSpaceClient:
     """
     # Set up basic environment, variables
     session = None
-    API_ENDPOINT = 'http://localhost:8080/server/api'
-    SOLR_ENDPOINT = 'http://localhost:8983/solr'
-    SOLR_AUTH = None
-    USER_AGENT = 'DSpace Python REST Client'
-    if 'DSPACE_API_ENDPOINT' in os.environ:
-        API_ENDPOINT = os.environ['DSPACE_API_ENDPOINT']
+    # load .env file if it exists
+    if os.path.exists('.env'):
+        load_dotenv()
+    # load defaults from environment variables, or use these defaults
+    API_ENDPOINT = os.getenv('DSPACE_API_ENDPOINT', 'http://localhost:8080/server/api')
+    SOLR_ENDPOINT = os.getenv('SOLR_ENDPOINT', 'http://localhost:8080/solr')
+    USERNAME = os.getenv('DSPACE_API_USERNAME', 'username@test.system.edu')
+    PASSWORD = os.getenv('DSPACE_API_PASSWORD', 'password')
+    SOLR_AUTH = os.getenv('SOLR_AUTH', None)
+    USER_AGENT = os.getenv('USER_AGENT', 'DSpace Python REST Client')
     LOGIN_URL = f'{API_ENDPOINT}/authn/login'
-    USERNAME = 'username@test.system.edu'
-    if 'DSPACE_API_USERNAME' in os.environ:
-        USERNAME = os.environ['DSPACE_API_USERNAME']
-    PASSWORD = 'password'
-    if 'DSPACE_API_PASSWORD' in os.environ:
-        PASSWORD = os.environ['DSPACE_API_PASSWORD']
-    if 'SOLR_ENDPOINT' in os.environ:
-        SOLR_ENDPOINT = os.environ['SOLR_ENDPOINT']
-    if 'SOLR_AUTH' in os.environ:
-        SOLR_AUTH = os.environ['SOLR_AUTH']
-    if 'USER_AGENT' in os.environ:
-        USER_AGENT = os.environ['USER_AGENT']
     verbose = False
 
     # Simple enum for patch operation types
