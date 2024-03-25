@@ -16,15 +16,14 @@ better abstracting and handling of HAL-like API responses, plus just all the oth
 """
 import json
 import logging
-
-import requests
-from requests import Request
 import pysolr
 import os
-from uuid import UUID
-from .models import *
+import requests
 
 from urllib.parse import urlparse
+from uuid import UUID
+
+from .models import *
 
 __all__ = ["DSpaceClient"]
 
@@ -750,7 +749,7 @@ class DSpaceClient:
             payload = {"properties": json.dumps(properties) + ";application/json"}
             h = self.session.headers
             h.update({"Content-Encoding": "gzip", "User-Agent": self.USER_AGENT})
-            req = Request("POST", url, data=payload, headers=h, files=files)
+            req = requests.Request("POST", url, data=payload, headers=h, files=files)
             prepared_req = self.session.prepare_request(req)
             r = self.session.send(prepared_req)
 
