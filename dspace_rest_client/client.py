@@ -1042,10 +1042,10 @@ class DSpaceClient:
 
     def get_eperson_id_of_user(self):
         """
-          Get the EPerson ID of the current user
-          authn/status response includes the eperson link
-          the uuid can be parsed from the eperson link and returned as text
-          @return:        String of the user id
+        Get the EPerson ID of the current user
+        authn/status response includes the eperson link
+        the uuid can be parsed from the eperson link and returned as text
+        @return:        String of the user id
         """
         url = f"{self.API_ENDPOINT}/authn/status"
         r = self.api_get(url)
@@ -1055,6 +1055,22 @@ class DSpaceClient:
             path = urlparse(eperson_href).path
             uuid = os.path.basename(path)
         return uuid
+
+    def get_special_groups_of_user(self):
+        """
+        Get the special groups of a user
+        authn/status/specialGroups
+        """
+        url = f"{self.API_ENDPOINT}/authn/status/specialGroups"
+        r = self.api_get(url)
+        r_json = parse_json(response=r)
+        if "_embedded" in r_json:
+            if "specialGroups" in r_json["_embedded"]:
+                groups = list()
+                for group_resource in r_json["_embedded"]["specialGroups"]:
+                    groups.append(Group(group_resource))
+                return groups
+        return r_json
 
     def delete_user(self, user):
         if not isinstance(user, User):
