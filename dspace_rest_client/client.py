@@ -736,24 +736,24 @@ class DSpaceClient:
                             token, the request will retry once, after the token is refreshed. (default: False)
         @return:            constructed Bitstream object from the API response, or None if the operation failed.
         """
-        # TODO: It is probably wise to allow the bundle UUID to be simply passed as an alternative to having the full
-        #  python object as constructed by this REST client, for more flexible usage.
-        # TODO: Better error detection and handling for file reading
         if bundle is None or name is None or path is None or mime is None:
             logging.error(f"Missing required parameters for create_bitstream")
             return None
         if metadata is None:
             metadata = {}
         url = f"{self.API_ENDPOINT}/core/bundles/{bundle.uuid}/bitstreams"
-        file = (name, open(path, "rb"), mime)
-        files = {"file": file}
-        properties = {"name": name, "metadata": metadata, "bundleName": bundle.name}
-        payload = {"properties": json.dumps(properties) + ";application/json"}
-        h = self.session.headers
-        h.update({"Content-Encoding": "gzip", "User-Agent": self.USER_AGENT})
-        req = Request("POST", url, data=payload, headers=h, files=files)
-        prepared_req = self.session.prepare_request(req)
-        r = self.session.send(prepared_req)
+
+        with open(path, "rb") as file_obj:
+            file = (name, file_obj, mime)
+            files = {"file": file}
+            properties = {"name": name, "metadata": metadata, "bundleName": bundle.name}
+            payload = {"properties": json.dumps(properties) + ";application/json"}
+            h = self.session.headers
+            h.update({"Content-Encoding": "gzip", "User-Agent": self.USER_AGENT})
+            req = Request("POST", url, data=payload, headers=h, files=files)
+            prepared_req = self.session.prepare_request(req)
+            r = self.session.send(prepared_req)
+
         if "DSPACE-XSRF-TOKEN" in r.headers:
             t = r.headers["DSPACE-XSRF-TOKEN"]
             logging.debug("Updating token to " + t)
