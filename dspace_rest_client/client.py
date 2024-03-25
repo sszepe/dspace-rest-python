@@ -39,7 +39,12 @@ def parse_json(response):
     """
     response_json = None
     try:
-        response_json = response.json()
+        if response is not None:
+            response_json = response.json()
+        else:
+            logging.error(f"Empty response object")
+            # return empty json object
+            return {}
     except ValueError as err:
         logging.error(f"Error parsing response JSON: {err}. Body text: {response.text}")
     return response_json
