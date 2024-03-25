@@ -193,6 +193,18 @@ class DSpaceClient:
         r = self.api_post(self.LOGIN_URL, None, None)
         self.update_token(r)
 
+    def logout(self):
+        """
+        Logout from the DSpace REST API
+        @return: response object
+        """
+        logout = self.session.post(
+            f"{self.API_ENDPOINT}/authn/logout", headers=self.request_headers
+        )
+        if logout.status_code == 204:
+            logging.info(f"User {self.USERNAME} logged out successfully")
+            return True
+
     def api_get(self, url, params=None, data=None, headers=None):
         """
         Perform a GET request. Refresh XSRF token if necessary.
