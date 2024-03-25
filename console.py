@@ -23,7 +23,7 @@ d = DSpaceClient(api_endpoint=url, username=username, password=password)
 # Authenticate against the DSpace client
 authenticated = d.authenticate()
 if not authenticated:
-    print(f"Error logging in! Giving up.")
+    logging.info(f"Error logging in! Giving up.")
     sys.exit(1)
 
 code.interact(local=locals())
