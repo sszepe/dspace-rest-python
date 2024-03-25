@@ -739,6 +739,9 @@ class DSpaceClient:
         # TODO: It is probably wise to allow the bundle UUID to be simply passed as an alternative to having the full
         #  python object as constructed by this REST client, for more flexible usage.
         # TODO: Better error detection and handling for file reading
+        if bundle is None or name is None or path is None or mime is None:
+            logging.error(f"Missing required parameters for create_bitstream")
+            return None
         if metadata is None:
             metadata = {}
         url = f"{self.API_ENDPOINT}/core/bundles/{bundle.uuid}/bitstreams"
