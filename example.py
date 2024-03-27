@@ -36,7 +36,7 @@ d = DSpaceClient(
 # Authenticate against the DSpace client
 authenticated = d.authenticate()
 if not authenticated:
-    logging.info(f"Error logging in! Giving up.")
+    logging.info("Error logging in! Giving up.")
     sys.exit(1)
 
 # Put together some basic Community data.
@@ -69,7 +69,7 @@ new_community = d.create_community(parent=community_parent, data=community_data)
 if isinstance(new_community, Community) and new_community.uuid is not None:
     logging.info(f"New community created! Handle: {new_community.handle}")
 else:
-    logging.info(f"Error! Giving up.")
+    logging.info("Error! Giving up.")
     sys.exit(1)
 
 # Update the community metadata
@@ -112,7 +112,7 @@ new_collection = d.create_collection(parent=collection_parent, data=collection_d
 if isinstance(new_collection, Collection) and new_collection.uuid is not None:
     logging.info(f"New collection created! Handle: {new_collection.handle}")
 else:
-    logging.info(f"Error! Giving up.")
+    logging.info("Error! Giving up.")
     sys.exit(1)
 
 # Put together some basic Item data.
@@ -165,7 +165,7 @@ new_item = d.create_item(parent=new_collection.uuid, item=item)
 if isinstance(new_item, Item) and new_item.uuid is not None:
     logging.info(f"New item created! Handle: {new_item.handle}")
 else:
-    logging.info(f"Error! Giving up.")
+    logging.info("Error! Giving up.")
     sys.exit(1)
 
 # Add a single metadata field+value to the item (PATCH operation)
@@ -184,7 +184,7 @@ new_bundle = d.create_bundle(parent=new_item, name="ORIGINAL")
 if isinstance(new_bundle, Bundle) and new_bundle.uuid is not None:
     logging.info(f"New bundle created! UUID: {new_bundle.uuid}")
 else:
-    logging.info(f"Error! Giving up.")
+    logging.info("Error! Giving up.")
     sys.exit(1)
 
 # Create and upload a new bitstream using the LICENSE.txt file in this project
@@ -217,7 +217,7 @@ new_bitstream = d.create_bitstream(
 if isinstance(new_bitstream, Bitstream) and new_bitstream.uuid is not None:
     logging.info(f"New bitstream created! UUID: {new_bitstream.uuid}")
 else:
-    logging.info(f"Error! Giving up.")
+    logging.info("Error! Giving up.")
     sys.exit(1)
 
 logging.info(

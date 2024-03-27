@@ -35,7 +35,7 @@ d = DSpaceClient(
 # Authenticate against the DSpace client
 authenticated = d.authenticate()
 if not authenticated:
-    logging.info(f"Error logging in! Giving up.")
+    logging.info("Error logging in! Giving up.")
     sys.exit(1)
 
 # Retrieving objects - now that we know there is some data in the repository we can demonstrate
