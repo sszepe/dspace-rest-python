@@ -566,7 +566,7 @@ class EntityType(AddressableHALResource):
         if "label" in api_resource:
             self.label = api_resource["label"]
         if "type" in api_resource:
-            self.label = api_resource["type"]
+            self.type = api_resource["type"]
 
 
 class RelationshipType(AddressableHALResource):
