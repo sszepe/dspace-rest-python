@@ -1,6 +1,6 @@
 import setuptools
 
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding="utf_8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
@@ -14,9 +14,9 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/the-library-code/dspace-rest-client",
     project_urls={
-        'Documentation': 'https://github.com/the-library-code/dspace-rest-python/blob/main/README.md',
-        'GitHub': 'https://github.com/the-library-code/dspace-rest-python',
-        'Changelog': 'https://github.com/the-library-code/dspace-rest-python/blob/main/CHANGELOG.md',
+        "Documentation": "https://github.com/the-library-code/dspace-rest-python/blob/main/README.md",
+        "GitHub": "https://github.com/the-library-code/dspace-rest-python",
+        "Changelog": "https://github.com/the-library-code/dspace-rest-python/blob/main/CHANGELOG.md",
     },
     classifiers=[
         "Programming Language :: Python :: 3.7",
