@@ -325,7 +325,7 @@ class Community(SimpleDSpaceObject):
         Default constructor. Call DSpaceObject init then set item-specific attributes
         @param api_resource: API result object to use as initial data
         """
-        super(Community, self).__init__(api_resource)
+        super().__init__(api_resource)
         self.type = "community"
 
     def as_dict(self):
@@ -482,7 +482,7 @@ class User(SimpleDSpaceObject):
         Default constructor. Call DSpaceObject init then set user-specific attributes
         @param api_resource: API result object to use as initial data
         """
-        super(User, self).__init__(api_resource)
+        super().__init__(api_resource)
         self.type = "user"
         if "name" in api_resource:
             self.name = api_resource["name"]
@@ -504,7 +504,7 @@ class User(SimpleDSpaceObject):
         Return a dict representation of this User, based on super with user-specific attributes added
         @return: dict of User for API use
         """
-        dso_dict = super(User, self).as_dict()
+        dso_dict = super().as_dict()
         user_dict = {
             "name": self.name,
             "netid": self.netid,
@@ -524,7 +524,7 @@ class InProgressSubmission(AddressableHALResource):
     type = None
 
     def __init__(self, api_resource):
-        super(InProgressSubmission, self).__init__(api_resource)
+        super().__init__(api_resource)
         if "lastModified" in api_resource:
             self.lastModified = api_resource["lastModified"]
         if "step" in api_resource:
@@ -535,7 +535,7 @@ class InProgressSubmission(AddressableHALResource):
             self.lastModified = api_resource["lastModified"]
 
     def as_dict(self):
-        parent_dict = super(InProgressSubmission, self).as_dict()
+        parent_dict = super().as_dict()
         dict = {
             "lastModified": self.lastModified,
             "step": self.step,
@@ -548,10 +548,10 @@ class InProgressSubmission(AddressableHALResource):
 class WorkspaceItem(InProgressSubmission):
 
     def __init__(self, api_resource):
-        super(WorkspaceItem, self).__init__(api_resource)
+        super().__init__(api_resource)
 
     def as_dict(self):
-        return super(WorkspaceItem, self).as_dict()
+        return super().as_dict()
 
 
 class EntityType(AddressableHALResource):
@@ -562,7 +562,7 @@ class EntityType(AddressableHALResource):
     """
 
     def __init__(self, api_resource):
-        super(EntityType, self).__init__(api_resource)
+        super().__init__(api_resource)
         if "label" in api_resource:
             self.label = api_resource["label"]
         if "type" in api_resource:
@@ -575,4 +575,4 @@ class RelationshipType(AddressableHALResource):
     """
 
     def __init__(self, api_resource):
-        super(RelationshipType, self).__init__(api_resource)
+        super().__init__(api_resource)
