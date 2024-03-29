@@ -469,12 +469,12 @@ class User(SimpleDSpaceObject):
     """
 
     type = "user"
-    name = (None,)
-    netid = (None,)
-    lastActive = (None,)
-    canLogIn = (False,)
-    email = (None,)
-    requireCertificate = (False,)
+    name = None
+    netid = None
+    lastActive = None
+    canLogIn = False
+    email = None
+    requireCertificate = False
     selfRegistered = False
 
     def __init__(self, api_resource=None):
