@@ -253,7 +253,7 @@ class Item(SimpleDSpaceObject):
     inArchive = False
     discoverable = False
     withdrawn = False
-    metadata = dict()
+    metadata = {}
 
     def __init__(self, api_resource=None, dso=None):
         """
