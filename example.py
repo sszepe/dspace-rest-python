@@ -221,7 +221,7 @@ else:
     sys.exit(1)
 
 logging.info(
-    f"All finished with example data creation. Visit your test repository to review created objects"
+    "All finished with example data creation. Visit your test repository to review created objects"
 )
 
 # Retrieving objects - now that we know there is some data in the repository we can demonstrate

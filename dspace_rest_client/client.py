@@ -42,7 +42,7 @@ def parse_json(response):
         if response is not None:
             response_json = response.json()
         else:
-            logging.error(f"Empty response object")
+            logging.error("Empty response object")
             # return empty json object
             return {}
     except ValueError as err:
@@ -361,11 +361,11 @@ class DSpaceClient:
         @see https://github.com/DSpace/RestContract/blob/main/metadata-patch.md
         """
         if url is None:
-            logging.error(f"Missing required URL argument")
+            logging.error("Missing required URL argument")
             return None
         if path is None:
             logging.error(
-                f"Need valid path eg. /withdrawn or /metadata/dc.title/0/language"
+                "Need valid path eg. /withdrawn or /metadata/dc.title/0/language"
             )
             return None
         if (
@@ -375,7 +375,7 @@ class DSpaceClient:
         ) and value is None:
             # missing value required for add/replace/move operations
             logging.error(
-                f'Missing required "value" argument for add/replace/move operations'
+                'Missing required "value" argument for add/replace/move operations'
             )
             return None
 
@@ -536,8 +536,8 @@ class DSpaceClient:
         dso_type = type(dso)
         if not isinstance(dso, SimpleDSpaceObject):
             logging.error(
-                f"Only SimpleDSpaceObject types (eg Item, Collection, Community) "
-                f"are supported by generic update_dso PUT."
+                "Only SimpleDSpaceObject types (eg Item, Collection, Community) "
+                "are supported by generic update_dso PUT."
             )
             return dso
         try:
@@ -588,13 +588,13 @@ class DSpaceClient:
         """
         if dso is None:
             if url is None:
-                logging.error(f"Need a DSO or a URL to delete")
+                logging.error("Need a DSO or a URL to delete")
                 return None
         else:
             if not isinstance(dso, SimpleDSpaceObject):
                 logging.error(
-                    f"Only SimpleDSpaceObject types (eg Item, Collection, Community, EPerson) "
-                    f"are supported by generic update_dso PUT."
+                    "Only SimpleDSpaceObject types (eg Item, Collection, Community, EPerson) "
+                    "are supported by generic update_dso PUT."
                 )
                 return dso
             # Get self URI from HAL links
@@ -731,7 +731,7 @@ class DSpaceClient:
         @return:            constructed Bitstream object from the API response, or None if the operation failed.
         """
         if bundle is None or name is None or path is None or mime is None:
-            logging.error(f"Missing required parameters for create_bitstream")
+            logging.error("Missing required parameters for create_bitstream")
             return None
         if metadata is None:
             metadata = {}
@@ -1088,7 +1088,7 @@ class DSpaceClient:
 
     def delete_user(self, user):
         if not isinstance(user, User):
-            logging.error(f"Must be a valid user")
+            logging.error("Must be a valid user")
             return None
         return self.delete_dso(user)
 
