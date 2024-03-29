@@ -60,6 +60,14 @@ New bitstream created! UUID: 4740048b-25fa-4040-b0d1-4b27f13de75d
 All finished with example data creation. Visit your test repository to review created objects
 ```
 
+## Test
+
+You can test the dspace_rest_client with pytest:
+
+```
+pytest -cov-report term-missing --cov=dspace_rest_client .\dspace_rest_client\test\ -vv
+```
+
 ## Credits
 
 Created by [Kim Shepherd](https://www.github.com/kshepherd) for [The Library Code GmbH](https://www.lib-co.de) with support from Universität Hohenheim
