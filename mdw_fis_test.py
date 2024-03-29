@@ -25,7 +25,7 @@ url = os.getenv('DSPACE_API_ENDPOINT')
 username = os.getenv('DSPACE_API_USERNAME')
 password = os.getenv('DSPACE_API_PASSWORD')
 if not url or not username or not password:
-    logging.error(f'Error: DSPACE_API_ENDPOINT, DSPACE_API_USERNAME, or DSPACE_API_PASSWORD not set in .env file')
+    logging.error('Error: DSPACE_API_ENDPOINT, DSPACE_API_USERNAME, or DSPACE_API_PASSWORD not set in .env file')
     sys.exit(1)
 else:
     logging.info(f'Connecting to DSpace API at {url} as {username}')
@@ -35,7 +35,7 @@ d = DSpaceClient(api_endpoint=url, username=username, password=password, fake_us
 # Authenticate against the DSpace client
 authenticated = d.authenticate()
 if not authenticated:
-    logging.error(f'Error logging in! Giving up.')
+    logging.error('Error logging in! Giving up.')
     sys.exit(1)
 else:
     logging.info(f'Logged in as {username}')
@@ -45,12 +45,12 @@ eperson_id = d.get_eperson_id_of_user()
 if eperson_id:
     logging.info(f'User ID: {eperson_id}')
 else:
-    logging.error(f'Error getting user ID')
+    logging.error('Error getting user ID')
 special_groups = d.get_special_groups_of_user()
 if special_groups:
     logging.info(f'Special groups: {special_groups}')
 else:
-    logging.error(f'No special groups present')
+    logging.error('No special groups present')
 
 # Log out
 d.logout()
