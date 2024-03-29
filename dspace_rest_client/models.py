@@ -528,11 +528,11 @@ class InProgressSubmission(AddressableHALResource):
         if "lastModified" in api_resource:
             self.lastModified = api_resource["lastModified"]
         if "step" in api_resource:
-            self.step = api_resource["lastModified"]
+            self.step = api_resource["step"]
         if "sections" in api_resource:
             self.sections = api_resource["sections"].copy()
         if "type" in api_resource:
-            self.lastModified = api_resource["lastModified"]
+            self.type = api_resource["type"]
 
     def as_dict(self):
         parent_dict = super().as_dict()
