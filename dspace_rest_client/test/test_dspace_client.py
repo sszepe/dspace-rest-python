@@ -7,9 +7,9 @@ import requests_mock
 
 from faker import Faker
 from dotenv import dotenv_values
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, call
 
-from ..client import parse_json, DSpaceClient, DSpaceObject, SimpleDSpaceObject, Bitstream, Bundle, Item, Community, Collection, User
+from ..client import parse_json, DSpaceClient, DSpaceObject, SimpleDSpaceObject, Bitstream, Bundle, Item, Community, Collection, User, Group
 
 faker = Faker()
 
@@ -158,6 +158,25 @@ def test_authenticate_csrf_failure_then_success():
 
         assert result is True
 
+def test_authenticate_too_many_retries(mocker):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    
+    # Mock the session.post method to simulate a 403 Forbidden response
+    mocked_post = mocker.patch.object(client.session, 'post', side_effect=[
+        MagicMock(status_code=403, text="CSRF token invalid"),
+        MagicMock(status_code=403, text="CSRF token invalid")
+    ])
+
+    # Mock logging.error to assert it gets called with the expected message
+    with mocker.patch('logging.error') as mocked_error_log:
+        result = client.authenticate()
+        
+        # Verify that the method returns False after too many retries
+        assert result is False
+        
+        # Verify that the session.post method was called twice (initial call + retry)
+        assert mocked_post.call_count == 2
+
 def test_refresh_token(mocker):
     # Mock the api_post method to simulate a successful POST request with a CSRF token
     mock_response = MagicMock()
@@ -260,6 +279,36 @@ def test_api_post_uri_csrf_retry():
         
         assert response.status_code == 200
 
+def test_api_post_retry_on_csrf_failure(mocker):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    url = "http://example.com/api/test"
+    params = {"test": "param"}
+    json_data = {"key": "value"}
+    csrf_failure_response = MagicMock(status_code=403, text='CSRF token invalid')
+    success_response = MagicMock(status_code=200, json=lambda: {"success": True})
+
+    # Mock session.post to simulate CSRF token failure followed by a successful retry
+    mocked_post = mocker.patch.object(client.session, 'post', side_effect=[csrf_failure_response, success_response])
+    
+    # Mock parse_json to return a simulated response indicating CSRF token failure
+    mocker.patch('dspace_rest_client.client.parse_json', side_effect=[{"message": "CSRF token invalid"}, {"success": True}])
+    
+    # Mock logging.debug to assert it gets called with the expected message
+    with mocker.patch('logging.debug') as mock_log_debug:
+        response = client.api_post(url, params=params, json=json_data)
+        
+        # Verify that the method returns the success response after retrying
+        assert response.json() == {"success": True}
+        
+        # Verify that session.post was called twice
+        assert mocked_post.call_count == 2
+        
+        # Verify the first call to session.post was with the initial parameters
+        mocked_post.assert_has_calls([
+            call(url, json=json_data, params=params, headers=client.request_headers),
+            call(url, json=json_data, params=params, headers=client.request_headers)
+        ])
+                
 def test_api_post_success():
     url = 'http://localhost:8080/server/api/test'
     json_data = {"key": "value"}
@@ -297,6 +346,33 @@ def test_api_post_csrf_retry():
         
         assert response.status_code == 200
         assert response.json() == json_data
+
+def test_api_post_uri_retry_on_csrf_failure(mocker):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    url = "http://example.com/api/test"
+    params = {"test": "param"}
+    uri_list = "http://example.com/api/item/1"
+    csrf_failure_response = MagicMock(status_code=403, json=lambda: {"message": "CSRF token invalid"})
+    success_response = MagicMock(status_code=200, json=lambda: {"success": True})
+
+    # Mock session.post to simulate CSRF token failure followed by a successful retry
+    mocked_post = mocker.patch.object(client.session, 'post', side_effect=[csrf_failure_response, success_response])
+    
+    # Mock logging.debug to assert it gets called with the expected message
+    with mocker.patch('logging.debug') as mock_log_debug:
+        response = client.api_post_uri(url, params=params, uri_list=uri_list)
+        
+        # Verify that the method returns the success response after retrying
+        assert response.json() == {"success": True}
+        
+        # Verify that session.post was called twice (initial call + retry)
+        assert mocked_post.call_count == 2
+        
+        # Verify the first call to session.post was with the initial parameters
+        mocked_post.assert_has_calls([
+            call(url, data=uri_list, params=params, headers=client.list_request_headers),
+            call(url, data=uri_list, params=params, headers=client.list_request_headers)
+        ])
 
 def test_api_put_success():
     url = 'http://localhost:8080/server/api/test'
@@ -423,6 +499,57 @@ def test_api_patch_missing_arguments():
         assert response is None
         assert mock_log_error.called
 
+def test_api_patch_invalid_path(mocker):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    
+    # Mock logging.error to capture the log message
+    with mocker.patch('logging.error') as mock_log_error:
+        result = client.api_patch(url="http://example.com/api/test", operation="add", path=None, value="test")
+        
+        # Verify the method returns None
+        assert result is None
+
+def test_api_patch_missing_value(mocker):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    
+    # Mock logging.error for capturing log messages
+    with mocker.patch('logging.error') as mock_log_error:
+        result = client.api_patch(url="http://example.com/api/test", operation="add", path="/metadata/dc.title", value=None)
+        
+        # Verify the method returns None
+        assert result is None
+
+def test_api_patch_move_operation(mocker):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    original_path = "/original/path"
+    new_path = "/new/path"
+    
+    # Mock session.patch to prevent actual HTTP calls
+    mocked_patch = mocker.patch.object(client.session, 'patch', return_value=MagicMock(status_code=200))
+    
+    client.api_patch(url="http://example.com/api/test", operation="move", path=new_path, value=original_path)
+    
+    # Extract the json data sent to session.patch
+    called_args, called_kwargs = mocked_patch.call_args
+    sent_data = called_kwargs["json"][0]
+    
+    # Verify the 'from' and 'path' values in data
+    assert sent_data["from"] == original_path
+    assert sent_data["path"] == new_path
+
+def test_api_patch_retry_warning():
+    # Create an instance of DSpaceClient
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    
+    # Mock the session.patch method to return a 403 response
+    with patch.object(client.session, 'patch', return_value=MagicMock(status_code=403, text='Forbidden')) as mock_patch:
+        # Mock the parse_json method to return a JSON-like response
+        with patch('dspace_rest_client.client.parse_json', return_value={'message': 'CSRF token expired'}) as mock_parse_json:
+            # Mock the logging.warning method
+            with patch('dspace_rest_client.client.logging.warning') as mock_warning:
+                # Call the api_patch method with retry set to True
+                client.api_patch(url="http://example.com/api/test", operation="add", path="/metadata/dc.title", value="test", retry=True)
+                
 @pytest.fixture
 def dspace_client_dso(mocker):
     client = DSpaceClient(api_endpoint='http://localhost:8080/server/api', username='admin', password='admin')
@@ -441,7 +568,7 @@ def dspace_client_dso(mocker):
     return client
 
 def test_search_objects_success(dspace_client_dso):
-    dsos = dspace_client_dso.search_objects(query="test")
+    dsos = dspace_client_dso.search_objects(query="test", dso_type="collection", scope="123456789/1", size=10, page=0, sort="name,asc")
     
     assert len(dsos) == 2
     assert all(isinstance(dso, DSpaceObject) for dso in dsos)
@@ -486,6 +613,28 @@ def test_fetch_resource_json_parse_error(mocker):
     result = client.fetch_resource("http://localhost:8080/server/api/badjson", {})
     
     assert result is None
+
+def test_get_dso_valid_uuid():
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    
+    # Mock the UUID method to return a valid UUID version
+    with patch('dspace_rest_client.client.UUID', return_value=MagicMock(version=4)) as mock_uuid:
+        with patch.object(client, 'api_get', return_value={'uuid': '12345678-1234-5678-1234-567812345678'}) as mock_api_get:
+            # Call the get_dso method with a valid UUID
+            result = client.get_dso(url="http://example.com/api/test", uuid="12345678-1234-5678-1234-567812345678")
+            
+            mock_api_get.assert_called_once_with("http://example.com/api/test/12345678-1234-5678-1234-567812345678", None, None)
+            assert result == {'uuid': '12345678-1234-5678-1234-567812345678'}
+
+def test_get_dso_invalid_uuid():
+    # Create an instance of DSpaceClient
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    
+    # Mock the UUID method to raise a ValueError (simulate invalid UUID)
+    with patch('dspace_rest_client.client.UUID', side_effect=ValueError("Invalid UUID")) as mock_uuid:
+        result = client.get_dso(url="http://example.com/api/test", uuid="invalid_uuid")
+        
+        assert result is None 
 
 def test_create_dso_success(mocker):
     client = DSpaceClient(api_endpoint='http://localhost:8080/server/api', username='admin', password='admin')
@@ -548,6 +697,13 @@ def test_update_dso_failure(mocker, mock_dso):
         result = client.update_dso(mock_dso)
         
         assert result is None
+
+def test_update_dso_with_none_dso(mocker):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    
+    result = client.update_dso(dso=None)
+    
+    assert result is None
 
 def test_delete_dso_success(mocker, mock_dso):
     client = DSpaceClient(api_endpoint='http://localhost:8080/server/api', username='admin', password='admin')
@@ -641,3 +797,265 @@ def test_get_bitstreams_for_bundle(mocker):
     assert bitstreams[0].uuid == "bitstream-uuid-1"
     assert bitstreams[1].uuid == "bitstream-uuid-2"
 
+@pytest.fixture
+def mock_bundle():
+    bundle = Bundle({"uuid": "bundle-uuid", "name": "ORIGINAL"})
+    return bundle
+
+def test_create_bitstream_success(mocker, mock_bundle, tmp_path):
+    client = DSpaceClient(api_endpoint='http://localhost:8080/server/api', username='admin', password='admin')
+    # Create a temporary file to simulate an actual file upload
+    tmp_file = tmp_path / "testfile.txt"
+    tmp_file.write_text("Test file content")
+    
+    mocker.patch.object(client.session, 'send', return_value=MagicMock(status_code=201, json=lambda: {"uuid": "bitstream-uuid"}))
+
+    bitstream = client.create_bitstream(bundle=mock_bundle, name="testfile.txt", path=str(tmp_file), mime="text/plain")
+    
+    assert bitstream.uuid == "bitstream-uuid"
+
+# def test_download_bitstream_success(mocker):
+#     client = DSpaceClient(api_endpoint='http://localhost:8080/server/api', username='admin', password='admin')
+#     mocker.patch.object(client, 'api_get', return_value=MagicMock(status_code=200, content=b"Bitstream content"))
+
+#     response = client.download_bitstream(uuid="bitstream-uuid")
+    
+#     assert response.status_code == 200
+#     assert response.content == b"Bitstream content"
+
+def test_get_communities_top(mocker):
+    client = DSpaceClient(api_endpoint='http://localhost:8080/server/api', username='admin', password='admin')
+    mock_communities_data = {
+        "_embedded": {
+            "communities": [
+                {"uuid": "community-uuid-1", "name": "Community 1"},
+                {"uuid": "community-uuid-2", "name": "Community 2"}
+            ]
+        }
+    }
+    mocker.patch.object(client, 'fetch_resource', return_value=mock_communities_data)
+
+    communities = client.get_communities(top=True)
+    
+    assert len(communities) == 2
+    assert all(isinstance(community, Community) for community in communities)
+    assert communities[0].uuid == "community-uuid-1"
+    assert communities[1].uuid == "community-uuid-2"
+
+def test_create_community_success(mocker):
+    client = DSpaceClient(api_endpoint='http://localhost:8080/server/api', username='admin', password='admin')
+    mocker.patch('dspace_rest_client.client.parse_json', return_value={"uuid": "community-uuid", "name": "New Community"})
+    mocker.patch.object(client, 'create_dso', return_value=MagicMock(status_code=201, json=lambda: {"uuid": "community-uuid", "name": "New Community"}))
+
+    community = client.create_community(parent="parent-uuid", data={"name": "New Community"})
+    
+    assert isinstance(community, Community)
+    assert community.uuid == "community-uuid"
+    assert community.name == "New Community"
+
+def test_get_collections_for_community(mocker):
+    client = DSpaceClient(api_endpoint='http://localhost:8080/server/api', username='admin', password='admin')
+    mock_community = Community({"uuid": "community-uuid"})
+    mock_community.links = {"collections": {"href": "http://localhost:8080/server/api/core/communities/community-uuid/collections"}}
+    mock_collections_data = {
+        "_embedded": {
+            "collections": [
+                {"uuid": "collection-uuid-1", "name": "Collection 1"},
+                {"uuid": "collection-uuid-2", "name": "Collection 2"}
+            ]
+        }
+    }
+    mocker.patch.object(client, 'fetch_resource', return_value=mock_collections_data)
+
+    collections = client.get_collections(community=mock_community)
+    
+    assert len(collections) == 2
+    assert all(isinstance(collection, Collection) for collection in collections)
+    assert collections[0].uuid == "collection-uuid-1"
+    assert collections[1].uuid == "collection-uuid-2"
+
+def test_create_collection_success(mocker):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    data = {"name": "New Collection"}
+    parent_uuid = "parent-community-uuid"
+    response_data = {"uuid": "new-collection-uuid", "name": "New Collection"}
+    
+    mocker.patch('dspace_rest_client.client.parse_json', return_value=response_data)
+    mocker.patch.object(client, 'create_dso', return_value=MagicMock(json=lambda: response_data))
+
+    collection = client.create_collection(parent=parent_uuid, data=data)
+    
+    assert isinstance(collection, Collection)
+    assert collection.uuid == "new-collection-uuid"
+    assert collection.name == "New Collection"
+    client.create_dso.assert_called_once_with(f"{client.API_ENDPOINT}/core/collections", {"parent": parent_uuid}, data)
+        
+@pytest.fixture
+def mock_user_data():
+    return User({"email": "test@example.com", "firstName": "Test", "lastName": "User"})
+
+def test_create_user_with_user_object(mocker, mock_user_data):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    response_data = {"email": "test@example.com", "firstName": "Test", "lastName": "User", "uuid": "user-uuid"}
+    
+    mocker.patch('dspace_rest_client.client.parse_json', return_value=response_data)
+    mocker.patch.object(client, 'create_dso', return_value=MagicMock(json=lambda: response_data))
+
+    new_user = client.create_user(user=mock_user_data)
+    
+    assert isinstance(new_user, User)
+    assert new_user.email == "test@example.com"
+    assert new_user.uuid == "user-uuid"
+    client.create_dso.assert_called_once()
+
+def test_create_user_with_dict(mocker):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    user_dict = {"email": "test@example.com", "firstName": "Test", "lastName": "User"}
+    response_data = {"email": "test@example.com", "firstName": "Test", "lastName": "User", "uuid": "user-uuid"}
+    
+    mocker.patch('dspace_rest_client.client.parse_json', return_value=response_data)
+    mocker.patch.object(client, 'create_dso', return_value=MagicMock(json=lambda: response_data))
+
+    new_user = client.create_user(user=user_dict)
+    
+    assert isinstance(new_user, User)
+    assert new_user.email == "test@example.com"
+    assert new_user.uuid == "user-uuid"
+    client.create_dso.assert_called_once_with(f"{client.API_ENDPOINT}/eperson/epersons", params=None, data=user_dict)
+
+def test_create_user_with_token(mocker):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    user_dict = {"email": "test@example.com", "firstName": "Test", "lastName": "User"}
+    token = "registration-token"
+    response_data = {"email": "test@example.com", "firstName": "Test", "lastName": "User", "uuid": "user-uuid"}
+    
+    mocker.patch('dspace_rest_client.client.parse_json', return_value=response_data)
+    mocker.patch.object(client, 'create_dso', return_value=MagicMock(json=lambda: response_data))
+
+    new_user = client.create_user(user=user_dict, token=token)
+    
+    assert new_user.uuid == "user-uuid"
+    client.create_dso.assert_called_once_with(f"{client.API_ENDPOINT}/eperson/epersons", params={"token": token}, data=user_dict)
+
+def test_delete_user_success(mocker):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    mock_user = User({"uuid": "user-uuid"})
+    
+    mocker.patch.object(client, 'delete_dso', return_value=True)
+
+    result = client.delete_user(mock_user)
+    
+    assert result is True
+    client.delete_dso.assert_called_once_with(mock_user)
+
+def test_delete_user_invalid(mocker):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    
+    with mocker.patch('logging.error') as mock_log_error:
+        result = client.delete_user(user="not a user object")
+        
+        assert result is None
+
+def test_get_users_success(mocker):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    api_response = {
+        "_embedded": {
+            "epersons": [
+                {"uuid": "user-uuid-1", "email": "user1@example.com"},
+                {"uuid": "user-uuid-2", "email": "user2@example.com"}
+            ]
+        }
+    }
+    mocker.patch.object(client, 'api_get', return_value=MagicMock(status_code=200, json=lambda: api_response))
+    mocker.patch('dspace_rest_client.client.parse_json', return_value=api_response)
+
+    users = client.get_users()
+    
+    assert len(users) == 2
+    assert all(isinstance(user, User) for user in users)
+    assert users[0].uuid == "user-uuid-1"
+    assert users[1].uuid == "user-uuid-2"
+
+@pytest.fixture
+def mock_group():
+    return Group({"name": "New Group"})
+
+def test_create_group_with_group_object(mocker, mock_group):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    response_data = {"name": "New Group", "uuid": "group-uuid"}
+    
+    mocker.patch('dspace_rest_client.client.parse_json', return_value=response_data)
+    mocker.patch.object(client, 'create_dso', return_value=MagicMock(json=lambda: response_data))
+
+    new_group = client.create_group(group=mock_group)
+    
+    assert isinstance(new_group, Group)
+    assert new_group.name == "New Group"
+    assert new_group.uuid == "group-uuid"
+
+def test_update_token(mocker):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    response = MagicMock(headers={"DSPACE-XSRF-TOKEN": "new-token"})
+    
+    with mocker.patch('logging.debug') as mock_log_debug:
+        client.update_token(r=response)
+        
+        assert client.session.headers["X-XSRF-Token"] == "new-token"
+        assert client.session.cookies.get("X-XSRF-Token") == "new-token"
+
+def test_start_workflow(mocker):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    workspace_item = "workspaceitem-uuid"
+    response_data = {"message": "Workflow started"}  # Simulate expected response
+    
+    mocker.patch.object(client, 'api_post_uri', return_value=MagicMock(json=lambda: response_data))
+    mocker.patch('dspace_rest_client.client.parse_json', return_value=response_data)
+
+    # Assuming you want to do something with the response in the method eventually
+    client.start_workflow(workspace_item=workspace_item)
+    client.api_post_uri.assert_called_once_with(f"{client.API_ENDPOINT}/workflow/workflowitems", params=None, uri_list=workspace_item)
+
+def test_get_short_lived_token_success(mocker):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    response_data = {"token": "short-lived"}
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = response_data
+    mocker.patch.object(client, 'api_post', return_value=mock_response)
+
+    token = client.get_short_lived_token()
+
+    assert token == "short-lived"
+
+def test_get_short_lived_token_failure(mocker):
+    client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+    mock_response = MagicMock()
+    mock_response.status_code = 403
+    mock_response.json.return_value = {"message": "Forbidden"}
+    mocker.patch.object(client, 'api_post', return_value=mock_response)
+
+    with mocker.patch('logging.error') as mock_log_error:
+        token = client.get_short_lived_token()
+        
+        assert token is None
+
+# def test_solr_query(mocker):
+#     client = DSpaceClient(api_endpoint='http://example.com', username='admin', password='admin')
+#     query = "dc.title:Test"
+#     response_data = {
+#         "response": {
+#             "numFound": 1,
+#             "docs": [
+#                 {"id": "item-1", "dc.title": "Test Item"}
+#             ]
+#         }
+#     }
+    
+#     mocker.patch.object(client, 'api_get', return_value=MagicMock(status_code=200, json=lambda: response_data))
+#     mocker.patch('dspace_rest_client.client.parse_json', return_value=response_data)
+
+#     results = client.solr_query(query=query)
+    
+#     assert len(results) == 1
+#     assert results[0]["id"] == "item-1"
+#     assert results[0]["dc.title"] == "Test Item"
