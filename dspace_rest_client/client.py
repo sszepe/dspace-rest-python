@@ -65,7 +65,6 @@ class DSpaceClient:
     if os.path.exists('.env'):
         load_dotenv()
     # load defaults from environment variables, or use these defaults
-    USER_AGENT = "DSpace Python REST Client"
     if "DSPACE_API_ENDPOINT" in os.environ:
         API_ENDPOINT = os.environ["DSPACE_API_ENDPOINT"]
         LOGIN_URL = f'{API_ENDPOINT}/authn/login'
@@ -81,6 +80,8 @@ class DSpaceClient:
         SOLR_AUTH = None
     if "USER_AGENT" in os.environ:
         USER_AGENT = os.environ["USER_AGENT"]
+    else:
+        USER_AGENT = "DSpace Python REST Client"
     verbose = False
 
     # Simple enum for patch operation types
