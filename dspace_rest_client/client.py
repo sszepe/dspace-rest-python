@@ -65,11 +65,10 @@ class DSpaceClient:
     if os.path.exists('.env'):
         load_dotenv()
     # load defaults from environment variables, or use these defaults
-    LOGIN_URL = f'{API_ENDPOINT}/authn/login'
-    SOLR_AUTH = None
     USER_AGENT = "DSpace Python REST Client"
     if "DSPACE_API_ENDPOINT" in os.environ:
         API_ENDPOINT = os.environ["DSPACE_API_ENDPOINT"]
+        LOGIN_URL = f'{API_ENDPOINT}/authn/login'
     if "DSPACE_API_USERNAME" in os.environ:
         USERNAME = os.environ["DSPACE_API_USERNAME"]
     if "DSPACE_API_PASSWORD" in os.environ:
@@ -78,6 +77,8 @@ class DSpaceClient:
         SOLR_ENDPOINT = os.environ["SOLR_ENDPOINT"]
     if "SOLR_AUTH" in os.environ:
         SOLR_AUTH = os.environ["SOLR_AUTH"]
+    else:
+        SOLR_AUTH = None
     if "USER_AGENT" in os.environ:
         USER_AGENT = os.environ["USER_AGENT"]
     verbose = False
