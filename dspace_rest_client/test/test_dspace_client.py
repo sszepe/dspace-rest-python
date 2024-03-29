@@ -28,7 +28,7 @@ def test_parse_json_invalid():
     with requests_mock.Mocker() as m:
         m.get("https://example.com", text="not a valid json")
         response = requests.get("https://example.com")
-        assert parse_json(response) == None
+        assert parse_json(response) is None
 
 def test_parse_json_none_response():
     """Test for None response"""
