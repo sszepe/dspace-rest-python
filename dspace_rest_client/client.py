@@ -62,12 +62,12 @@ class DSpaceClient:
     # Set up basic environment, variables
     session = None
     # load .env file if it exists
-    if os.path.exists('.env'):
+    if os.path.exists(".env"):
         load_dotenv()
     # load defaults from environment variables, or use these defaults
     if "DSPACE_API_ENDPOINT" in os.environ:
         API_ENDPOINT = os.environ["DSPACE_API_ENDPOINT"]
-        LOGIN_URL = f'{API_ENDPOINT}/authn/login'
+        LOGIN_URL = f"{API_ENDPOINT}/authn/login"
     if "DSPACE_API_USERNAME" in os.environ:
         USERNAME = os.environ["DSPACE_API_USERNAME"]
     if "DSPACE_API_PASSWORD" in os.environ:
@@ -126,9 +126,15 @@ class DSpaceClient:
                 "Chrome/39.0.2171.95 Safari/537.36"
             )
         # Set headers based on this
-        self.auth_request_headers = {'User-Agent': self.USER_AGENT}
-        self.request_headers = {'Content-type': 'application/json', 'User-Agent': self.USER_AGENT}
-        self.list_request_headers = {'Content-type': 'text/uri-list', 'User-Agent': self.USER_AGENT}
+        self.auth_request_headers = {"User-Agent": self.USER_AGENT}
+        self.request_headers = {
+            "Content-type": "application/json",
+            "User-Agent": self.USER_AGENT,
+        }
+        self.list_request_headers = {
+            "Content-type": "text/uri-list",
+            "User-Agent": self.USER_AGENT,
+        }
 
     def authenticate(self, retry=False):
         """
@@ -1176,6 +1182,6 @@ class DSpaceClient:
             fields = []
         if filters is None:
             filters = []
-        return self.solr.search(query, fq=filters, start=start, rows=rows, **{
-            'fl': ','.join(fields)
-        })
+        return self.solr.search(
+            query, fq=filters, start=start, rows=rows, **{"fl": ",".join(fields)}
+        )
