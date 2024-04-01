@@ -842,6 +842,49 @@ class DSpaceClient:
         # Return list (populated or empty)
         return communities
 
+    def get_parent_community(self, uuid=None):
+        """
+        Get the parent community of a given community
+        @param community: Community object
+        @return: Parent Community object
+        """
+        if uuid is None:
+            return None
+        url = f"{self.API_ENDPOINT}/core/communities/{uuid}/parentCommunity"
+        r_json = self.api_get(url)
+        if r_json.status_code == 200:
+            return Community(api_resource=parse_json(r_json))
+        else:
+            return None
+
+    def get_sub_communities(self, uuid=None, page=0, size=20, sort=None):
+        """
+        Get sub-communities for a given community
+        @param community: Community object
+        @param page:    integer page (default: 0)
+        @param size:    integer size (default: 20)
+        @param sort:    sort string (default: None)
+        @return:        list of Community objects, or None if error
+        """
+        if uuid is None:
+            return None
+        url = f"{self.API_ENDPOINT}/core/communities/{uuid}/subcommunities"
+        params = {}
+        if size is not None:
+            params["size"] = size
+        if page is not None:
+            params["page"] = page
+        if sort is not None:
+            params["sort"] = sort
+        r_json = self.fetch_resource(url, params)
+        if "_embedded" in r_json:
+            if "subcommunities" in r_json["_embedded"]:
+                sub_communities = []
+                for community_resource in r_json["_embedded"]["subcommunities"]:
+                    sub_communities.append(community_resource)
+                return sub_communities
+        return None
+
     def create_community(self, parent, data):
         """
         Create a community, either top-level or beneath a given parent
