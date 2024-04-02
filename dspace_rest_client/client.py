@@ -479,6 +479,41 @@ class DSpaceClient:
 
         return dsos
 
+    def search_objects_admin(self, uri=None, embed=None, feature=None):
+        """
+        Do a basic search with uri, and optional embed and feature params. Focus: authorizations.
+        Adapted from Angular UI search service
+        @param uri: URI to search
+        @param embed: embeds to include in search
+        @param feature: feature to search
+        @return:        list of DspaceObject objects constructed from API resources
+        """
+        dsos = []
+        url = f"{self.API_ENDPOINT}/authz/authorizations/search/object"
+        params = {}
+
+        if uri is None:
+            logging.error("Missing required URI argument")
+            return dsos
+        else:
+            params["uri"] = uri
+        if embed is not None:
+            params["embed"] = embed
+        if feature is not None:
+            params["feature"] = feature
+
+        r_json = self.fetch_resource(url=url, params=params)
+
+        # instead lots of 'does this key exist, etc etc' checks, just go for it and wrap in a try?
+        try:
+            results = r_json["_embedded"]["authorizations"]
+            for result in results:
+                dsos.append(result)
+        except (TypeError, ValueError) as err:
+            logging.error(f"error parsing search result json {err}")
+
+        return dsos
+
     def fetch_resource(self, url, params=None):
         """
         Simple function for higher-level 'get' functions to use whenever they want
