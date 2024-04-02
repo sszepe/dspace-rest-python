@@ -56,32 +56,17 @@ class DSpaceClient:
     the REST API, maintain XSRF tokens, and all GET, POST, PUT, PATCH operations.
     Low-level api_get, api_post, api_put, api_delete, api_patch functions are defined to handle the requests and do
     retries / XSRF refreshes where necessary.
-    Higher level get, create, update, partial_update (patch) functions are implemented for each DSO type
+    Higher level get, create, update, partial_update (patch) functions are implemented for each DSO type.
     """
 
-    # Set up basic environment, variables
-    session = None
-    # load .env file if it exists
+    # Load .env file if it exists
     if os.path.exists(".env"):
         load_dotenv()
-    # load defaults from environment variables, or use these defaults
-    if "DSPACE_API_ENDPOINT" in os.environ:
-        API_ENDPOINT = os.environ["DSPACE_API_ENDPOINT"]
-        LOGIN_URL = f"{API_ENDPOINT}/authn/login"
-    if "DSPACE_API_USERNAME" in os.environ:
-        USERNAME = os.environ["DSPACE_API_USERNAME"]
-    if "DSPACE_API_PASSWORD" in os.environ:
-        PASSWORD = os.environ["DSPACE_API_PASSWORD"]
-    if "SOLR_ENDPOINT" in os.environ:
-        SOLR_ENDPOINT = os.environ["SOLR_ENDPOINT"]
-    if "SOLR_AUTH" in os.environ:
-        SOLR_AUTH = os.environ["SOLR_AUTH"]
-    else:
-        SOLR_AUTH = None
-    if "USER_AGENT" in os.environ:
-        USER_AGENT = os.environ["USER_AGENT"]
-    else:
-        USER_AGENT = "DSpace Python REST Client"
+
+    # Default values
+    DEFAULT_API_ENDPOINT = "http://localhost:8080/server/api"
+    DEFAULT_SOLR_ENDPOINT = "http://localhost:8983/solr"
+    DEFAULT_USER_AGENT = "DSpace Python REST Client"
     verbose = False
 
     # Simple enum for patch operation types
@@ -93,28 +78,47 @@ class DSpaceClient:
 
     def __init__(
         self,
-        api_endpoint=API_ENDPOINT,
-        username=USERNAME,
-        password=PASSWORD,
-        solr_endpoint=SOLR_ENDPOINT,
-        solr_auth=SOLR_AUTH,
+        api_endpoint=None,
+        username=None,
+        password=None,
+        solr_endpoint=None,
+        solr_auth=None,
         fake_user_agent=False,
     ):
         """
-        Accept optional API endpoint, username, password arguments using the OS environment variables as defaults
-        :param api_endpoint:    base path to DSpace REST API, eg. http://localhost:8080/server/api
-        :param username:        username with appropriate privileges to perform operations on REST API
-        :param password:        password for the above username
+        Constructor with optional parameters, using environment variables as defaults.
         """
-        self.session = requests.Session()
-        self.API_ENDPOINT = api_endpoint
-        self.LOGIN_URL = f"{self.API_ENDPOINT}/authn/login"
-        self.USERNAME = username
-        self.PASSWORD = password
-        self.SOLR_ENDPOINT = solr_endpoint
-        self.solr = pysolr.Solr(
-            url=solr_endpoint, always_commit=True, timeout=300, auth=solr_auth
+        # Environment or default for API endpoint
+        self.API_ENDPOINT = api_endpoint or os.environ.get(
+            "DSPACE_API_ENDPOINT", self.DEFAULT_API_ENDPOINT
         )
+        self.LOGIN_URL = f"{self.API_ENDPOINT}/authn/login"
+
+        # Environment or explicit values for authentication
+        self.USERNAME = username or os.environ.get("DSPACE_API_USERNAME")
+        self.PASSWORD = password or os.environ.get("DSPACE_API_PASSWORD")
+
+        # Environment or default for Solr endpoint
+        self.SOLR_ENDPOINT = solr_endpoint or os.environ.get(
+            "SOLR_ENDPOINT", self.DEFAULT_SOLR_ENDPOINT
+        )
+        self.SOLR_AUTH = solr_auth or os.environ.get("SOLR_AUTH")
+
+        # User agent setup
+        self.USER_AGENT = (
+            os.environ.get("USER_AGENT", self.DEFAULT_USER_AGENT)
+            if not fake_user_agent
+            else "FakeUserAgent"
+        )
+
+        # Initialize the session
+        self.session = requests.Session()
+
+        # Initialize Solr client
+        self.solr = pysolr.Solr(
+            url=self.SOLR_ENDPOINT, always_commit=True, timeout=300, auth=self.SOLR_AUTH
+        )
+
         # If fake_user_agent was specified, use this string that is known (as of 2023-12-03) to succeed with
         # requests to Cloudfront-protected API endpoints (tested on demo.dspace.org)
         # Otherwise, the user agent will be the more helpful and accurate default of 'DSpace Python REST Client'
