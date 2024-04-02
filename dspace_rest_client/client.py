@@ -1228,3 +1228,13 @@ class DSpaceClient:
         return self.solr.search(
             query, fq=filters, start=start, rows=rows, **{"fl": ",".join(fields)}
         )
+
+    def get_config(self, key):
+        """
+        Get configuration properties from the REST API
+        The Angular UI uses this to get configuration properties (eg. registration.verification.enabled).
+        """
+        url = f"{self.API_ENDPOINT}/config/properties/{key}"
+        if key in ["registration.verification.enabled"]:
+            return self.api_get(url).json()
+        return None
