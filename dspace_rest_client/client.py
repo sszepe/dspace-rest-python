@@ -204,6 +204,15 @@ class DSpaceClient:
         r = self.api_post(self.LOGIN_URL, None, None)
         self.update_token(r)
 
+    def get_authn_status(self):
+        """
+        Get the current authentication status
+        @return: response object
+        """
+        return self.session.get(
+            f"{self.API_ENDPOINT}/authn/status", headers=self.request_headers
+        )
+
     def logout(self):
         """
         Logout from the DSpace REST API
