@@ -1019,6 +1019,41 @@ class DSpaceClient:
             logging.error(f"Invalid item UUID: {uuid}")
             return None
 
+    def get_item_metrics(self, uuid):
+        """
+        Get metrics for an item, given its UUID
+        @param uuid:    the UUID of the item
+        @return:        the raw API response
+        """
+        url = f"{self.API_ENDPOINT}/core/items"
+        try:
+            id = UUID(uuid).version
+            url = f"{url}/{uuid}/metrics"
+            return self.api_get(url, None, None)
+        except ValueError:
+            logging.error(f"Invalid item UUID: {uuid}")
+            return None
+
+    def get_item_thumbnail(self, uuid):
+        """
+        Get thumbnail for an item, given its UUID
+        @param uuid:    the UUID of the item
+        @return:        the raw API response
+        """
+        url = f"{self.API_ENDPOINT}/core/items"
+        try:
+            id = UUID(uuid).version
+            url = f"{url}/{uuid}/thumbnail"
+            if self.api_get(url, None, None).status_code == 200:
+                return self.api_get(url, None, None)
+            elif self.api_get(url, None, None).status_code == 204:
+                return "No thumbnail available for this item"
+            else:
+                return None
+        except ValueError:
+            logging.error(f"Invalid item UUID: {uuid}")
+            return None
+
     def get_items(self):
         """
         Get all archived items for a logged-in administrator. Admin only! Usually you will want to
