@@ -86,16 +86,79 @@ for top_community in top_communities:
                     logging.info(f"{bitstream.name} ({bitstream.uuid})")
 
 first_community = top_communities[0]
-print(f"First Community: {first_community.as_dict()}")
+logging.info(f"First Community: {first_community.as_dict()}")
 
 # get Top Community: LIS -> get first item in list returned by d.get_communities
 lis_parent_community = d.get_parent_community(
     uuid="49d47738-1a1b-4d91-b364-70511c63aed0"
 )
-print(f"Parent Community: {lis_parent_community.as_dict()}")
+logging.info(f"Parent Community: {lis_parent_community.as_dict()}")
 
 lis_sub_community = d.get_sub_communities(uuid="c78fa4d1-b739-42d4-90b2-9759f7f5df55")
-print(f"Sub Communities: {lis_sub_community}")
+logging.info(f"Sub Communities: {lis_sub_community}")
+
+# get objects for start page
+start_page_items = d.search_objects(
+    query="*:*",
+    sort="dc.date.accessioned,DESC",
+    page=0,
+    size=5,
+    dso_type="item",
+)
+for item in start_page_items:
+    logging.info(f"Item: {item.name} ({item.uuid})")
+    logging.info(f"Item type: {item.metadata['dspace.entity.type'][0]['value']}")
+
+# get the most viewed items
+most_viewed_items = d.search_objects(
+    query="*:*",
+    sort="metric.view,DESC",
+    page=0,
+    size=5,
+    dso_type="item",
+    configuration="homePageTopItems",
+)
+for item in most_viewed_items:
+    logging.info(f"Item: {item.name} ({item.uuid})")
+    # logging.info(f"Item type: {item.metadata['dspace.entity.type'][0]['value']}")
+
+# search objects admin
+search_objects = d.search_objects_admin(
+    uri="https://repo.mdw.ac.at/fis/api/core/sites/ef5351a2-dee8-490e-93d9-c5cb5348d1c4",
+    feature="isCommunityAdmin",
+    embed="feature",
+)
+logging.info(f"Search objects admin: {search_objects}")
+for item in search_objects:
+    logging.info(f"Item: {item})")
+
+# configuration
+config = d.get_config(key="registration.verification.enabled")
+logging.info(f"Registration verification enabled: {config['values'][0]}")
+
+# get item f306cec7-d348-41b8-9c1a-4fc53ee5854f
+item = d.get_item(uuid="f306cec7-d348-41b8-9c1a-4fc53ee5854f")
+logging.info(f"Item: {item.json()}")
+# metrices
+metrics = d.get_item_metrics(uuid="f306cec7-d348-41b8-9c1a-4fc53ee5854f")
+logging.info(f"Metrics: {metrics.json()}")
+# thumbnail
+thumbnail = d.get_item_thumbnail(uuid="f306cec7-d348-41b8-9c1a-4fc53ee5854f")
+logging.info(f"Thumbnail: {thumbnail}")
 
 # Log out
 d.logout()
+
+d = DSpaceClient(api_endpoint=url, unauthenticated=True, fake_user_agent=True)
+
+# get objects for start page
+start_page_items = d.search_objects(
+    query="*:*",
+    sort="dc.date.accessioned,DESC",
+    page=0,
+    size=5,
+    dso_type="item",
+)
+most_viewed_page_items = d.search_objects(
+    sort="metric.view,DESC", page=0, size=5, configuration="homePageTopItems"
+)
