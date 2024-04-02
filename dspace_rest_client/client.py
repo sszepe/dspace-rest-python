@@ -84,6 +84,7 @@ class DSpaceClient:
         solr_endpoint=None,
         solr_auth=None,
         fake_user_agent=False,
+        unauthenticated=False,
     ):
         """
         Constructor with optional parameters, using environment variables as defaults.
@@ -94,9 +95,10 @@ class DSpaceClient:
         )
         self.LOGIN_URL = f"{self.API_ENDPOINT}/authn/login"
 
-        # Environment or explicit values for authentication
-        self.USERNAME = username or os.environ.get("DSPACE_API_USERNAME")
-        self.PASSWORD = password or os.environ.get("DSPACE_API_PASSWORD")
+        if not unauthenticated:
+            # Environment or explicit values for authentication
+            self.USERNAME = username or os.environ.get("DSPACE_API_USERNAME")
+            self.PASSWORD = password or os.environ.get("DSPACE_API_PASSWORD")
 
         # Environment or default for Solr endpoint
         self.SOLR_ENDPOINT = solr_endpoint or os.environ.get(
@@ -536,6 +538,12 @@ class DSpaceClient:
         @return:        JSON parsed from API response or None if error
         """
         r = self.api_get(url, params, None)
+        print(url)
+        # construct url with params for logging
+        if params is not None:
+            url = f"{url}?{params}"
+        logging.info(f"Fetching resource from {url}")
+        print(r.json())
         if r.status_code != 200:
             logging.error(f"Error encountered fetching resource: {r.text}")
             return None
