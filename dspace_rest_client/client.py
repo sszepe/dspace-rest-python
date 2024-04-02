@@ -449,6 +449,7 @@ class DSpaceClient:
         size=20,
         sort=None,
         dso_type=None,
+        configuration=None,
     ):
         """
         Do a basic search with optional query, filters and dsoType params.
@@ -459,6 +460,7 @@ class DSpaceClient:
         @param size: size of page (aka. 'rows'), affects the page parameter above
         @param sort: sort eg. 'title,asc'
         @param dso_type: DSO type to further filter results
+        @param configuration: configuration to use for search
         @return:        list of DspaceObject objects constructed from API resources
         """
         dsos = []
@@ -479,6 +481,8 @@ class DSpaceClient:
             params["page"] = page
         if sort is not None:
             params["sort"] = sort
+        if configuration is not None:
+            params["configuration"] = configuration
 
         r_json = self.fetch_resource(url=url, params={**params, **filters})
 
