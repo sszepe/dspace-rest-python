@@ -149,16 +149,35 @@ logging.info(f"Thumbnail: {thumbnail}")
 # Log out
 d.logout()
 
-d = DSpaceClient(api_endpoint=url, unauthenticated=True, fake_user_agent=True)
+# d = DSpaceClient(api_endpoint=url, unauthenticated=True, fake_user_agent=True)
 
 # get objects for start page
-start_page_items = d.search_objects(
-    query="*:*",
-    sort="dc.date.accessioned,DESC",
-    page=0,
-    size=5,
-    dso_type="item",
+# start_page_items = d.search_objects(
+#    query="*:*",
+#    sort="dc.date.accessioned,DESC",
+#    page=0,
+#    size=5,
+#    dso_type="item",
+# )
+# most_viewed_page_items = d.search_objects(
+#    sort="metric.view,DESC", page=0, size=5, configuration="homePageTopItems"
+# )
+
+d = DSpaceClient(
+    api_endpoint=url,
+    login_as="79f1e439-9fd5-450a-b7b1-f54009c82059",
+    fake_user_agent=True,
+    username=username,
+    password=password,
 )
-most_viewed_page_items = d.search_objects(
-    sort="metric.view,DESC", page=0, size=5, configuration="homePageTopItems"
-)
+d.authenticate()
+authenticated = d.authenticate()
+if not authenticated:
+    logging.error("Error logging in! Giving up.")
+    sys.exit(1)
+else:
+    logging.info(f"Logged in as {username}")
+
+# get auth status
+auth_status = d.get_authn_status()
+print(auth_status)

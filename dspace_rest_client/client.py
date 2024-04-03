@@ -85,6 +85,7 @@ class DSpaceClient:
         solr_auth=None,
         fake_user_agent=False,
         unauthenticated=False,
+        login_as=None,
     ):
         """
         Constructor with optional parameters, using environment variables as defaults.
@@ -112,6 +113,22 @@ class DSpaceClient:
             if not fake_user_agent
             else "FakeUserAgent"
         )
+
+        self.LOGIN_AS = None
+        if login_as:
+            # unauthenticated must not be true and username and password must be set
+            if unauthenticated or not self.USERNAME or not self.PASSWORD:
+                logging.error(
+                    "Cannot use login_as without setting a username and password"
+                )
+            try:
+                # string value to UUID
+                uuid_obj = UUID(login_as, version=4)
+                # to ensure that the string is not just any hex value, check if it's the same after conversion
+                str(uuid_obj) == login_as
+                self.LOGIN_AS = login_as
+            except ValueError:
+                logging.error(f"Invalid UUID for login_as: {login_as}")
 
         # Initialize the session
         self.session = requests.Session()
@@ -211,6 +228,10 @@ class DSpaceClient:
         Get the current authentication status
         @return: response object
         """
+        if self.LOGIN_AS:
+            # append X-On-Behalf-Of header
+            self.request_headers.update({"X-On-Behalf-Of": self.LOGIN_AS})
+            print(self.request_headers)
         return self.session.get(
             f"{self.API_ENDPOINT}/authn/status", headers=self.request_headers
         )
@@ -236,9 +257,12 @@ class DSpaceClient:
         @param headers: any override headers (eg. with short-lived token for download)
         @return:        Response from API
         """
-        if headers is None:
-            headers = self.request_headers
-        r = self.session.get(url, params=params, data=data, headers=headers)
+        if self.LOGIN_AS:
+            # append X-On-Behalf-Of header
+            self.request_headers.update({"X-On-Behalf-Of": self.LOGIN_AS})
+        r = self.session.get(
+            url, params=params, data=data, headers=self.request_headers
+        )
         self.update_token(r)
         return r
 
@@ -252,6 +276,9 @@ class DSpaceClient:
         @param retry:   Has this method already been retried? Used if we need to refresh XSRF.
         @return:        Response from API
         """
+        if self.LOGIN_AS:
+            # append X-On-Behalf-Of header
+            self.request_headers.update({"X-On-Behalf-Of": self.LOGIN_AS})
         r = self.session.post(
             url, json=json, params=params, headers=self.request_headers
         )
@@ -284,6 +311,9 @@ class DSpaceClient:
         @param retry:   Has this method already been retried? Used if we need to refresh XSRF.
         @return:        Response from API
         """
+        if self.LOGIN_AS:
+            # append X-On-Behalf-Of header
+            self.request_headers.update({"X-On-Behalf-Of": self.LOGIN_AS})
         r = self.session.post(
             url, data=uri_list, params=params, headers=self.list_request_headers
         )
@@ -318,6 +348,9 @@ class DSpaceClient:
         @param retry:   Has this method already been retried? Used if we need to refresh XSRF.
         @return:        Response from API
         """
+        if self.LOGIN_AS:
+            # append X-On-Behalf-Of header
+            self.request_headers.update({"X-On-Behalf-Of": self.LOGIN_AS})
         r = self.session.put(
             url, params=params, json=json, headers=self.request_headers
         )
@@ -351,6 +384,9 @@ class DSpaceClient:
         @param retry:   Has this method already been retried? Used if we need to refresh XSRF.
         @return:        Response from API
         """
+        if self.LOGIN_AS:
+            # append X-On-Behalf-Of header
+            self.request_headers.update({"X-On-Behalf-Of": self.LOGIN_AS})
         r = self.session.delete(url, params=params, headers=self.request_headers)
         self.update_token(r)
 
@@ -383,6 +419,9 @@ class DSpaceClient:
         @return:
         @see https://github.com/DSpace/RestContract/blob/main/metadata-patch.md
         """
+        if self.LOGIN_AS:
+            # append X-On-Behalf-Of header
+            self.request_headers.update({"X-On-Behalf-Of": self.LOGIN_AS})
         if url is None:
             logging.error("Missing required URL argument")
             return None
