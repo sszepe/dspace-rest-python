@@ -69,7 +69,7 @@ All finished with example data creation. Visit your test repository to review cr
 You can test the dspace_rest_client with pytest:
 
 ```
-pytest -cov-report term-missing --cov=dspace_rest_client .\dspace_rest_client\test\ -vv
+pytest --cov-report term-missing --cov=dspace_rest_client .\dspace_rest_client\test\ -vv
 ```
 
 ## Upstream Handling
