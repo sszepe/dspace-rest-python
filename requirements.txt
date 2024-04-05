@@ -1,6 +1,6 @@
 requests~=2.27.1
 
-setuptools~=47.1.0
+setuptools==65.5.1
 fpdf~=1.7.2
 textblob~=0.17.1
 pysolr~=3.9.0
