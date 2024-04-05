@@ -1,4 +1,5 @@
 # DSpace Python REST Client Library
+
 This client library allows Python 3 scripts (Python 2 probably compatible but not officially supported) to interact with
 DSpace 7+ repositories, using the DSpace REST API.
 
@@ -10,24 +11,27 @@ Help with extending the scope and improving the code is always welcome!
 PyPI homepage: https://pypi.org/project/dspace-rest-client/
 
 ## Requirements
-* Python 3.x (developed using Python 3.8.5)
-* Python Requests module (see `requirements.txt`)
-* Working DSpace 7 repository with an accessible REST API
+
+- Python 3.x (developed using Python 3.8.5)
+- Python Requests module (see `requirements.txt`)
+- Working DSpace 7 repository with an accessible REST API
 
 ## Installation
-To install with pip: 
+
+To install with pip:
 `pip install dspace_rest_client`
 
 (or `pip3` or `python -m pip` as appropriate to your environment)
 
 To install manually, clone this repository and install the requirements:
+
 ```commandline
 git clone https://github.com/the-library-code/dspace-rest-python.git
 pip install -r requirements.txt
 ```
 
-
 ## Usage
+
 After installing dependencies, you're ready to run the script.
 You can either pass the base API URL to the DSpaceClient() constructor or set them as environment variables.
 
@@ -67,6 +71,15 @@ You can test the dspace_rest_client with pytest:
 ```
 pytest -cov-report term-missing --cov=dspace_rest_client .\dspace_rest_client\test\ -vv
 ```
+
+## Upstream Handling
+
+```
+git fetch upstream
+git merge upstream/main
+```
+
+Resolve conflicts manually if necessary.
 
 ## Credits
 
