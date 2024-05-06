@@ -1028,6 +1028,21 @@ class DSpaceClient:
             params = {"parent": parent}
         return Collection(api_resource=parse_json(self.create_dso(url, params, data)))
 
+    def get_collection_parent_community(self, uuid=None):
+        """
+        Get the parent community of a given collection
+        @param collection: Collection object
+        @return: Parent Community object
+        """
+        if uuid is None:
+            return None
+        url = f"{self.API_ENDPOINT}/core/collections/{uuid}/parentCommunity"
+        r_json = self.api_get(url)
+        if r_json.status_code == 200:
+            return Community(api_resource=parse_json(r_json))
+        else:
+            return None
+        
     def get_item(self, uuid):
         """
         Get an item, given its UUID
