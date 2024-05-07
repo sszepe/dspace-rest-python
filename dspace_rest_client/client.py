@@ -1094,6 +1094,51 @@ class DSpaceClient:
             logging.error(f"Invalid item UUID: {uuid}")
             return None
 
+    def get_item_owning_collection(self, uuid):
+        """
+        Get the owning collection of a given item
+        @param item: Item object
+        @return: Owning Collection object
+        """
+        if uuid is None:
+            return None
+        url = f"{self.API_ENDPOINT}/core/items/{uuid}/owningCollection"
+        r_json = self.api_get(url)
+        if r_json.status_code == 200:
+            return Collection(api_resource=parse_json(r_json))
+        else:
+            return None
+        
+    def get_item_mapped_collections(self, uuid):
+        """
+        Get the mapped collections of a given item
+        @param item: Item object
+        @return: Mapped Collection object
+        """
+        if uuid is None:
+            return None
+        url = f"{self.API_ENDPOINT}/core/items/{uuid}/mappedCollections"
+        r_json = self.api_get(url)
+        if r_json.status_code == 200:
+            return parse_json(r_json)
+        else:
+            return None
+
+    def get_item_relationships(self, uuid):
+        """
+        Get the relationships of a given item
+        @param item: Item object
+        @return: Relationships object
+        """
+        if uuid is None:
+            return None
+        url = f"{self.API_ENDPOINT}/core/items/{uuid}/relationships"
+        r_json = self.api_get(url)
+        if r_json.status_code == 200:
+            return parse_json(r_json)
+        else:
+            return None
+
     def get_items(self):
         """
         Get all archived items for a logged-in administrator. Admin only! Usually you will want to
