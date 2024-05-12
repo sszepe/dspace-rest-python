@@ -533,6 +533,68 @@ class DSpaceClient:
 
         return dsos
 
+    def search_object_detail(
+        self,
+        query=None,
+        scope=None,
+        filters=None,
+        page=0,
+        size=20,
+        sort=None,
+        dso_type=None,
+        configuration=None,
+    ):
+        """
+        Do a basic search with optional query, filters and dsoType params.
+        @param query:   query string
+        @param scope:   uuid to limit search scope, eg. owning collection, parent community, etc.
+        @param filters: discovery filters as dict eg. {'f.entityType': 'Publication,equals', ... }
+        @param page: page number (not like 'start' as this is not row number, but page number of size {size})
+        @param size: size of page (aka. 'rows'), affects the page parameter above
+        @param sort: sort eg. 'title,asc'
+        @param dso_type: DSO type to further filter results
+        @param configuration: configuration to use for search
+        @return:        list of DspaceObject objects constructed from API resources, pages_data, facets
+        """
+        dsos = []
+        if filters is None:
+            filters = {}
+        url = f"{self.API_ENDPOINT}/discover/search/objects"
+        # we will add params to filters, so
+        params = {}
+        if query is not None:
+            params["query"] = query
+        if scope is not None:
+            params["scope"] = scope
+        if dso_type is not None:
+            params["dsoType"] = dso_type
+        if size is not None:
+            params["size"] = size
+        if page is not None:
+            params["page"] = page
+        if sort is not None:
+            params["sort"] = sort
+        if configuration is not None:
+            params["configuration"] = configuration
+
+        r_json = self.fetch_resource(url=url, params={**params, **filters})
+
+        # instead lots of 'does this key exist, etc etc' checks, just go for it and wrap in a try?
+        try:
+            results = r_json["_embedded"]["searchResult"]["_embedded"]["objects"]
+            for result in results:
+                resource = result["_embedded"]["indexableObject"]
+                dso = DSpaceObject(resource)
+                dsos.append(dso)
+        except (TypeError, ValueError) as err:
+            logging.error(f"error parsing search result json {err}")
+
+        return (
+            dsos,
+            r_json["_embedded"]["searchResult"]["page"],
+            r_json["_embedded"]["facets"],
+        )
+
     def fetch_resource(self, url, params=None):
         """
         Simple function for higher-level 'get' functions to use whenever they want
@@ -1042,7 +1104,7 @@ class DSpaceClient:
             return Community(api_resource=parse_json(r_json))
         else:
             return None
-        
+
     def get_item(self, uuid):
         """
         Get an item, given its UUID
@@ -1108,7 +1170,7 @@ class DSpaceClient:
             return Collection(api_resource=parse_json(r_json))
         else:
             return None
-        
+
     def get_item_mapped_collections(self, uuid):
         """
         Get the mapped collections of a given item
