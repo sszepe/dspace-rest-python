@@ -1258,6 +1258,21 @@ class DSpaceClient:
             logging.error("Need a valid item")
             return None
         return self.update_dso(item, params=None)
+    
+    def delete_item(self, uuid):
+        """
+        Delete an item
+        @param uuid:    UUID of the item to delete
+        @return:        True if successful, False if not
+        """
+        url = f"{self.API_ENDPOINT}/core/items"
+        try:
+            id = UUID(uuid).version
+            url = f"{url}/{uuid}"
+            return self.api_delete(url, None, None)
+        except ValueError:
+            logging.error(f"Invalid item UUID: {uuid}")
+            return None
 
     def add_metadata(
         self, dso, field, value, language=None, authority=None, confidence=-1, place=""
