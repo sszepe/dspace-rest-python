@@ -1259,6 +1259,23 @@ class DSpaceClient:
             return None
         return self.update_dso(item, params=None)
     
+    def patch_item(self, uuid, operation, path, value):
+        """
+        Patch item. The Item passed to this method contains all the data, identifiers, links necessary to
+        perform the patch to the API. Note this is a partial update, not a full update operation.
+        @param item: python Item object
+        @param data: JSON data to patch
+        @return:
+        """
+        url = f"{self.API_ENDPOINT}/core/items"
+        try:
+            id = UUID(uuid).version
+            url = f"{url}/{uuid}"
+            return self.api_patch(url, operation, path, value, True)
+        except ValueError:
+            logging.error(f"Invalid item UUID: {uuid}")
+            return None
+    
     def delete_item(self, uuid):
         """
         Delete an item
