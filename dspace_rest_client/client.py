@@ -1469,13 +1469,15 @@ class DSpaceClient:
         logging.error("Could not retrieve short-lived token")
         return None
 
-    def solr_query(self, query, filters=None, fields=None, start=0, rows=999999999):
+    def solr_query(self, query, filters=None, fields=None, facets=None, minfacests=0, start=0, rows=999999999):
         if fields is None:
             fields = []
         if filters is None:
             filters = []
+        if facets is None:
+            facets = []
         return self.solr.search(
-            query, fq=filters, start=start, rows=rows, **{"fl": ",".join(fields)}
+            query, fq=filters, start=start, rows=rows, **{"fl": ",".join(fields)}, **{"facet.mincount": minfacests}, **{"facet.field": facets}
         )
 
     def get_config(self, key):
