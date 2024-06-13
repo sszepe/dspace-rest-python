@@ -1477,7 +1477,7 @@ class DSpaceClient:
         if facets is None:
             facets = []
         return self.solr.search(
-            query, fq=filters, start=start, rows=rows, **{"fl": ",".join(fields)}, **{"facet.mincount": minfacests}, **{"facet.field": facets}
+            query, fq=filters, start=start, rows=rows, facet="true", **{"fl": ",".join(fields)}, **{"facet.mincount": minfacests}, **{"facet.field": facets}
         )
 
     def get_config(self, key):
