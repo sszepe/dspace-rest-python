@@ -1170,6 +1170,46 @@ class DSpaceClient:
             return Collection(api_resource=parse_json(r_json))
         else:
             return None
+        
+        
+    def update_item_owning_collection(self, item_uuid, collection_uuid, inherit_policies=False):
+        """
+        Update the owning collection of a given item.
+        :param item_uuid: UUID of the item to be moved
+        :param collection_uuid: UUID of the target collection
+        :param inherit_policies: Boolean flag to inherit policies from the target collection
+        :return: True if successful, False otherwise
+        """
+        if item_uuid is None or collection_uuid is None:
+            logging.error("Item UUID or Collection UUID is missing.")
+            return False
+
+        # Construct the URL
+        url = f"{self.API_ENDPOINT}/core/items/{item_uuid}/owningCollection"
+        
+        # Construct the request body
+        data = f"{self.API_ENDPOINT}/core/collections/{collection_uuid}"
+
+        # Construct the parameters
+        params = {"inheritPolicies": str(inherit_policies).lower()}
+
+        # Perform the PUT request using the custom method
+        headers = self.request_headers.copy()
+        headers["Content-Type"] = "text/uri-list"
+
+        r = self.session.put(url, data=data, params=params, headers=headers)
+        self.update_token(r)
+
+        if r.status_code == 204:
+            logging.info(f"Item {item_uuid} successfully moved to Collection {collection_uuid}.")
+            return True
+        elif r.status_code == 403 and "CSRF token" in r.text:
+            logging.warning("CSRF token issue encountered, retrying with updated token.")
+            return self.update_item_owning_collection(item_uuid, collection_uuid, inherit_policies)
+        else:
+            logging.error(f"Failed to update owning collection: {r.status_code}: {r.text} ({url})")
+            return False
+
 
     def get_item_mapped_collections(self, uuid):
         """
