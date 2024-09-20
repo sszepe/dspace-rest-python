@@ -1170,8 +1170,10 @@ class DSpaceClient:
             return Collection(api_resource=parse_json(r_json))
         else:
             return None
-        
-    def update_item_owning_collection(self, item_uuid, collection_uuid, inherit_policies=False):
+
+    def update_item_owning_collection(
+        self, item_uuid, collection_uuid, inherit_policies=False
+    ):
         """
         Update the owning collection of a given item.
         :param item_uuid: UUID of the item to be moved
@@ -1185,7 +1187,7 @@ class DSpaceClient:
 
         # Construct the URL
         url = f"{self.API_ENDPOINT}/core/items/{item_uuid}/owningCollection"
-        
+
         # Construct the request body
         data = f"{self.API_ENDPOINT}/core/collections/{collection_uuid}"
 
@@ -1200,13 +1202,21 @@ class DSpaceClient:
         self.update_token(r)
 
         if r.status_code == 204:
-            logging.info(f"Item {item_uuid} successfully moved to Collection {collection_uuid}.")
+            logging.info(
+                f"Item {item_uuid} successfully moved to Collection {collection_uuid}."
+            )
             return True
         elif r.status_code == 403 and "CSRF token" in r.text:
-            logging.warning("CSRF token issue encountered, retrying with updated token.")
-            return self.update_item_owning_collection(item_uuid, collection_uuid, inherit_policies)
+            logging.warning(
+                "CSRF token issue encountered, retrying with updated token."
+            )
+            return self.update_item_owning_collection(
+                item_uuid, collection_uuid, inherit_policies
+            )
         else:
-            logging.error(f"Failed to update owning collection: {r.status_code}: {r.text} ({url})")
+            logging.error(
+                f"Failed to update owning collection: {r.status_code}: {r.text} ({url})"
+            )
             return False
 
     def get_item_mapped_collections(self, uuid):
@@ -1254,8 +1264,8 @@ class DSpaceClient:
         items = []
         if "_embedded" in r_json:
             # This is a list of items
-            if 'items' in r_json['_embedded']:
-                for item_resource in r_json['_embedded']['items']:
+            if "items" in r_json["_embedded"]:
+                for item_resource in r_json["_embedded"]["items"]:
                     items.append(Item(item_resource))
         elif "uuid" in r_json:
             # This is a single item
@@ -1296,7 +1306,7 @@ class DSpaceClient:
             logging.error("Need a valid item")
             return None
         return self.update_dso(item, params=None)
-    
+
     def patch_item(self, uuid, operation, path, value):
         """
         Patch item. The Item passed to this method contains all the data, identifiers, links necessary to
@@ -1312,7 +1322,7 @@ class DSpaceClient:
         except ValueError:
             logging.error(f"Invalid item UUID: {uuid}")
             return None
-    
+
     def delete_item(self, uuid):
         """
         Delete an item
@@ -1511,7 +1521,16 @@ class DSpaceClient:
         logging.error("Could not retrieve short-lived token")
         return None
 
-    def solr_query(self, query, filters=None, fields=None, facets=None, minfacests=0, start=0, rows=999999999):
+    def solr_query(
+        self,
+        query,
+        filters=None,
+        fields=None,
+        facets=None,
+        minfacests=0,
+        start=0,
+        rows=999999999,
+    ):
         """
         Perform a Solr query
         @param query:       Solr query string
@@ -1530,7 +1549,14 @@ class DSpaceClient:
         if facets is None:
             facets = []
         return self.solr.search(
-            query, fq=filters, start=start, rows=rows, facet="true", **{"fl": ",".join(fields)}, **{"facet.mincount": minfacests}, **{"facet.field": facets}
+            query,
+            fq=filters,
+            start=start,
+            rows=rows,
+            facet="true",
+            **{"fl": ",".join(fields)},
+            **{"facet.mincount": minfacests},
+            **{"facet.field": facets},
         )
 
     def get_config(self, key):
