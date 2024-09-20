@@ -9,14 +9,8 @@ when creating, updating, retrieving and deleting DSpace Objects.
 
 @author Kim Shepherd <kim@shepherd.nz>
 """
-import code
-import json
-import logging
 
-import requests
-from requests import Request
-import os
-from uuid import UUID
+import json
 
 __all__ = [
     "DSpaceObject",
