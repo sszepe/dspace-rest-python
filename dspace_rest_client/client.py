@@ -1430,6 +1430,12 @@ class DSpaceClient:
 
     # PAGINATION
     def get_users(self, page=0, size=20, sort=None):
+        """
+        Get users
+        @param page:    integer page (default: 0)
+        @param size:    integer size (default: 20)
+        @param sort:    sort string (default: None)
+        """
         url = f"{self.API_ENDPOINT}/eperson/epersons"
         users = []
         params = {}
@@ -1506,6 +1512,17 @@ class DSpaceClient:
         return None
 
     def solr_query(self, query, filters=None, fields=None, facets=None, minfacests=0, start=0, rows=999999999):
+        """
+        Perform a Solr query
+        @param query:       Solr query string
+        @param filters:     List of filter queries
+        @param fields:      List of fields to return
+        @param facets:      List of facet fields
+        @param minfacests:  Minimum count for facets
+        @param start:       Start index
+        @param rows:        Number of rows to return
+        @return:            Solr response
+        """
         if fields is None:
             fields = []
         if filters is None:
