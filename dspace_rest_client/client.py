@@ -1144,7 +1144,6 @@ class DSpaceClient:
         """
         url = f"{self.API_ENDPOINT}/core/items"
         try:
-            id = UUID(uuid).version
             url = f"{url}/{uuid}/thumbnail"
             if self.api_get(url, None, None).status_code == 200:
                 return self.api_get(url, None, None)
