@@ -1256,8 +1256,8 @@ class DSpaceClient:
         items = []
         if "_embedded" in r_json:
             # This is a list of items
-            if "collections" in r_json["_embedded"]:
-                for item_resource in r_json["_embedded"]["items"]:
+            if 'items' in r_json['_embedded']:
+                for item_resource in r_json['_embedded']['items']:
                     items.append(Item(item_resource))
         elif "uuid" in r_json:
             # This is a single item
