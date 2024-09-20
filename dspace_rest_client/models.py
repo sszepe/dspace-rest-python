@@ -59,6 +59,7 @@ class AddressableHALResource(HALResource):
     provided in the constructor and offers a method to return the resource data
     as a dictionary.
     """
+
     id = None
 
     def __init__(self, api_resource=None):
@@ -264,9 +265,9 @@ class SimpleDSpaceObject(DSpaceObject):
 class Item(SimpleDSpaceObject):
     """
     Extends DSpaceObject to implement specific attributes and functions for items
-    
+
     An `Item` is the primary digital object in DSpace, containing metadata, bundles / bitstreams.
-    This class models an `Item` with attributes related to its archival status, discoverability, 
+    This class models an `Item` with attributes related to its archival status, discoverability,
     and withdrawal status. It also provides methods for interacting with the item's metadata.
 
     Attributes:
@@ -285,19 +286,19 @@ class Item(SimpleDSpaceObject):
     Methods:
     -------
     __init__(api_resource=None, dso=None):
-        Initializes the `Item` object. If an API resource or another `DSpaceObject` is provided, it populates 
+        Initializes the `Item` object. If an API resource or another `DSpaceObject` is provided, it populates
         the item's attributes accordingly. Calls the `SimpleDSpaceObject` constructor to handle common attributes.
-    
+
     get_metadata_values(field):
-        Returns a list of metadata values for a specified metadata field. If the field doesn't exist, 
+        Returns a list of metadata values for a specified metadata field. If the field doesn't exist,
         it returns an empty list.
-    
+
     as_dict():
-        Returns a dictionary representation of the `Item`, combining fields from the parent `SimpleDSpaceObject` 
+        Returns a dictionary representation of the `Item`, combining fields from the parent `SimpleDSpaceObject`
         with item-specific attributes like `inArchive`, `discoverable`, and `withdrawn`.
 
     from_dso(cls, dso):
-        Class method that creates a new `Item` object from an existing `DSpaceObject`. It copies over all 
+        Class method that creates a new `Item` object from an existing `DSpaceObject`. It copies over all
         attributes from the provided `DSpaceObject` to the new `Item`.
     """
 
@@ -368,8 +369,8 @@ class Item(SimpleDSpaceObject):
 class Community(SimpleDSpaceObject):
     """
     Extends DSpaceObject to implement specific attributes and functions for communities
-    
-    A `Community` is a top-level container in the DSpace hierarchy used for  logical 
+
+    A `Community` is a top-level container in the DSpace hierarchy used for  logical
     grouping. Communities contain collections, which in turn contain items.
 
     Attributes:
@@ -380,12 +381,12 @@ class Community(SimpleDSpaceObject):
     Methods:
     -------
     __init__(api_resource=None):
-        Initializes the `Community` object. Calls the initializer of `SimpleDSpaceObject` 
+        Initializes the `Community` object. Calls the initializer of `SimpleDSpaceObject`
         to handle common attributes, then sets the `type` attribute specific to a community.
-    
+
     as_dict():
-        Returns a dictionary representation of the `Community` object, combining the fields 
-        from the parent `SimpleDSpaceObject`. This can be extended to include community-specific 
+        Returns a dictionary representation of the `Community` object, combining the fields
+        from the parent `SimpleDSpaceObject`. This can be extended to include community-specific
         attributes as needed.
     """
 
@@ -413,8 +414,8 @@ class Community(SimpleDSpaceObject):
 class Collection(SimpleDSpaceObject):
     """
     Extends DSpaceObject to implement specific attributes and functions for collections
-    
-    A `Collection` is a container in DSpace that holds items. Collections are grouped 
+
+    A `Collection` is a container in DSpace that holds items. Collections are grouped
     under communities, and each collection may contain items of e aspecific entity type,
     e.g., publications, projects, etc.
 
@@ -426,12 +427,12 @@ class Collection(SimpleDSpaceObject):
     Methods:
     -------
     __init__(api_resource=None):
-        Initializes the `Collection` object. Calls the initializer of `SimpleDSpaceObject` 
+        Initializes the `Collection` object. Calls the initializer of `SimpleDSpaceObject`
         to handle common attributes, then sets the `type` attribute specific to a collection.
-    
+
     as_dict():
-        Returns a dictionary representation of the `Collection` object, combining the fields 
-        from the parent `SimpleDSpaceObject`. This can be extended to include collection-specific 
+        Returns a dictionary representation of the `Collection` object, combining the fields
+        from the parent `SimpleDSpaceObject`. This can be extended to include collection-specific
         attributes as needed.
     """
 
@@ -458,10 +459,10 @@ class Collection(SimpleDSpaceObject):
 class Bundle(DSpaceObject):
     """
     Extends DSpaceObject to implement specific attributes and functions for bundles
-    
-    A `Bundle` is a collection of related `Bitstreams` in DSpace. Bundles group bitstreams 
-    together, typically used to organize content like different renditions or formats of a  
-    file (e.g., original file, thumbnail, etc.). This class extends `DSpaceObject` to add 
+
+    A `Bundle` is a collection of related `Bitstreams` in DSpace. Bundles group bitstreams
+    together, typically used to organize content like different renditions or formats of a
+    file (e.g., original file, thumbnail, etc.). This class extends `DSpaceObject` to add
     bundle-specific attributes and functionality.
 
     Attributes:
@@ -472,11 +473,11 @@ class Bundle(DSpaceObject):
     Methods:
     -------
     __init__(api_resource=None):
-        Initializes the `Bundle` object. Calls the initializer of `DSpaceObject` to handle common 
+        Initializes the `Bundle` object. Calls the initializer of `DSpaceObject` to handle common
         attributes, then sets the `type` attribute to "bundle".
 
     as_dict():
-        Returns a dictionary representation of the `Bundle` object, combining the fields from the 
+        Returns a dictionary representation of the `Bundle` object, combining the fields from the
         parent `DSpaceObject`. This is useful for API operations or debugging.
     """
 
@@ -503,8 +504,8 @@ class Bundle(DSpaceObject):
 class Bitstream(DSpaceObject):
     """
     Extends DSpaceObject to implement specific attributes and functions for bundles
-    
-    A `Bitstream` is a single file in DSpace. It contains additional metadata that describes 
+
+    A `Bitstream` is a single file in DSpace. It contains additional metadata that describes
     its file-specific attributes such as size, checksum, and the bundle to which it belongs.
     This class extends `DSpaceObject` to add bitstream-specific attributes and functionality.
 
@@ -525,12 +526,12 @@ class Bitstream(DSpaceObject):
     Methods:
     -------
     __init__(api_resource=None):
-        Initializes the `Bitstream` object. Calls the initializer of `DSpaceObject` to handle common 
+        Initializes the `Bitstream` object. Calls the initializer of `DSpaceObject` to handle common
         attributes and then sets bitstream-specific attributes based on the provided API resource.
-    
+
     as_dict():
-        Returns a dictionary representation of the `Bitstream` object, combining the fields from the 
-        parent `DSpaceObject` with bitstream-specific attributes (`bundleName`, `sizeBytes`, `checkSum`, 
+        Returns a dictionary representation of the `Bitstream` object, combining the fields from the
+        parent `DSpaceObject` with bitstream-specific attributes (`bundleName`, `sizeBytes`, `checkSum`,
         and `sequenceId`).
     """
 
@@ -575,9 +576,9 @@ class Bitstream(DSpaceObject):
 class Group(DSpaceObject):
     """
     Extends DSpaceObject to implement specific attributes and methods for groups (aka. EPersonGroups)
-    
-    he `Group` class models a DSpace group, which is a collection of users (EPersons) that can 
-    be used to manage permissions and access control within the DSpace system. Groups can be 
+
+    he `Group` class models a DSpace group, which is a collection of users (EPersons) that can
+    be used to manage permissions and access control within the DSpace system. Groups can be
     permanent or temporary, and each group has a name.
 
     Attributes:
@@ -593,12 +594,12 @@ class Group(DSpaceObject):
     Methods:
     -------
     __init__(api_resource=None):
-        Initializes the `Group` object, setting group-specific attributes based on the API resource 
+        Initializes the `Group` object, setting group-specific attributes based on the API resource
         data provided, if available. Calls the `DSpaceObject` initializer for common attributes.
-    
+
     as_dict():
-        Returns a dictionary representation of the `Group` object, combining the fields from the 
-        parent `DSpaceObject` and the specific group attributes (`name`, `permanent`). This is 
+        Returns a dictionary representation of the `Group` object, combining the fields from the
+        parent `DSpaceObject` and the specific group attributes (`name`, `permanent`). This is
         useful when serializing the object for API operations or for debugging purposes.
     """
 
@@ -631,10 +632,10 @@ class Group(DSpaceObject):
 class User(SimpleDSpaceObject):
     """
     Extends DSpaceObject to implement specific attributes and methods for users (aka. EPersons)
-    
-    This class models a user in the DSpace system and includes attributes such as the user's 
-    name, network ID (netid), last activity timestamp, login capabilities, email, certificate 
-    requirement, and whether they self-registered. It is used for both representing and 
+
+    This class models a user in the DSpace system and includes attributes such as the user's
+    name, network ID (netid), last activity timestamp, login capabilities, email, certificate
+    requirement, and whether they self-registered. It is used for both representing and
     manipulating user data retrieved from the DSpace API.
 
     Attributes:
@@ -644,7 +645,7 @@ class User(SimpleDSpaceObject):
     name : str or None
         TODO: The user's full name as stored in the DSpace system.???
     netid : str or None
-        The user's network ID, which can be used for authentication or identification within 
+        The user's network ID, which can be used for authentication or identification within
         the institution. (e.g. username)
     lastActive : str or None
         The timestamp of the user's last activity within the DSpace system.
@@ -661,9 +662,9 @@ class User(SimpleDSpaceObject):
     -------
     __init__(api_resource=None):
         Initializes the user object, setting attributes based on the provided API resource.
-    
+
     as_dict():
-        Returns a dictionary representation of the user, combining the parent class attributes 
+        Returns a dictionary representation of the user, combining the parent class attributes
         with the user-specific fields for use in the DSpace API.
     """
 
@@ -720,8 +721,8 @@ class InProgressSubmission(AddressableHALResource):
     """
     Represents a submission that is in progress in the DSpace workflow.
 
-    This class extends the `AddressableHALResource` and is used to model an in-progress submission, 
-    which contains metadata like the last modification date, the current step of the submission 
+    This class extends the `AddressableHALResource` and is used to model an in-progress submission,
+    which contains metadata like the last modification date, the current step of the submission
     process, and its sections.
 
     Attributes:
@@ -738,9 +739,10 @@ class InProgressSubmission(AddressableHALResource):
     Methods:
     -------
     as_dict():
-        Returns a dictionary representation of the submission, including the inherited 
+        Returns a dictionary representation of the submission, including the inherited
         fields and the specific attributes (lastModified, step, sections, and type).
     """
+
     lastModified = None
     step = None
     sections = {}
@@ -772,16 +774,16 @@ class WorkspaceItem(InProgressSubmission):
     """
     Represents an item in the workspace for submission in DSpace.
 
-    This class extends `InProgressSubmission`, and models a workspace item, 
+    This class extends `InProgressSubmission`, and models a workspace item,
     which is essentially a submission that hasn't been completed or archived yet.
 
-    It inherits all attributes and methods from `InProgressSubmission`, including metadata such as 
+    It inherits all attributes and methods from `InProgressSubmission`, including metadata such as
     the last modified timestamp, step in the submission process, and section information.
 
     Methods:
     -------
     as_dict():
-        Returns a dictionary representation of the workspace item, combining the inherited 
+        Returns a dictionary representation of the workspace item, combining the inherited
         fields from `InProgressSubmission` and `AddressableHALResource`.
     """
 
