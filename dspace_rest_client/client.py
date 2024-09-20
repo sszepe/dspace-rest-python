@@ -1171,7 +1171,6 @@ class DSpaceClient:
         else:
             return None
         
-        
     def update_item_owning_collection(self, item_uuid, collection_uuid, inherit_policies=False):
         """
         Update the owning collection of a given item.
@@ -1209,7 +1208,6 @@ class DSpaceClient:
         else:
             logging.error(f"Failed to update owning collection: {r.status_code}: {r.text} ({url})")
             return False
-
 
     def get_item_mapped_collections(self, uuid):
         """
@@ -1309,7 +1307,6 @@ class DSpaceClient:
         """
         url = f"{self.API_ENDPOINT}/core/items"
         try:
-            id = UUID(uuid).version
             url = f"{url}/{uuid}"
             return self.api_patch(url, operation, path, value, True)
         except ValueError:
