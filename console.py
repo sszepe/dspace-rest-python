@@ -1,9 +1,28 @@
-from dspace_rest_client.client import DSpaceClient
-from dspace_rest_client.models import Community, Collection, Item, Bundle, Bitstream
+"""
+This script initializes a DSpace REST client to interact with a DSpace instance.
+It authenticates using credentials provided via environment variables or defaults
+defined in the script, and opens an interactive Python shell for further exploration.
+
+Modules used:
+- code: Used to start an interactive interpreter session.
+- logging: Logs error messages or information.
+- os: Provides access to environment variables.
+- sys: Handles system-level operations, like exiting the script.
+- dspace_rest_client: Client for interacting with a DSpace instance.
+
+Environment Variables:
+- DSPACE_API_ENDPOINT: (Optional) The endpoint for the DSpace API.
+- DSPACE_API_USERNAME: (Optional) Username for authentication.
+- DSPACE_API_PASSWORD: (Optional) Password for authentication.
+"""
+
 import code
 import logging
 import os
 import sys
+
+from dspace_rest_client.client import DSpaceClient
+
 
 # The DSpace client will look for the same environment variables but we can also look for them here explicitly
 # and as an example
