@@ -16,7 +16,6 @@ from ..models import (
     InProgressSubmission,
     WorkspaceItem,
     EntityType,
-    RelationshipType,
 )
 
 
