@@ -1324,7 +1324,6 @@ class DSpaceClient:
         """
         url = f"{self.API_ENDPOINT}/core/items"
         try:
-            id = UUID(uuid).version
             url = f"{url}/{uuid}"
             return self.api_delete(url, None, None)
         except ValueError:
