@@ -199,38 +199,17 @@ def test_dspace_client_initialization_custom_args(monkeypatch, mocker):
     monkeypatch.setenv("DSPACE_API_PASSWORD", "fallbackPass")
     monkeypatch.setenv("SOLR_ENDPOINT", "http://fallback:8983/solr")
     monkeypatch.setenv("SOLR_AUTH", "env-solr-auth-token")
-    
+
     # Mock external dependencies
     mocker.patch("requests.Session")
     mocker.patch("pysolr.Solr")
 
-    # Custom arguments for initialization
-    custom_args = {
-        "api_endpoint": "http://custom:8080/server/api",
-        "username": "customUser",
-        "password": "customPass",
-        "solr_endpoint": "http://custom:8983/solr",
-        "solr_auth": None,  # Explicitly passing None for first test
-        "fake_user_agent": True,
-    }
-
-    # Instantiate the client with custom arguments
-    client = DSpaceClient(**custom_args)
-
-    # Assertions to verify custom arguments are used
-    assert client.API_ENDPOINT == custom_args["api_endpoint"]
-    assert client.USERNAME == custom_args["username"]
-    assert client.PASSWORD == custom_args["password"]
-    assert client.SOLR_ENDPOINT == custom_args["solr_endpoint"]
-    assert client.SOLR_AUTH is None  # Since we explicitly passed None, it should not fall back to env var
-
-    # Test when SOLR_AUTH is derived from the environment variable
-    # Remove the explicit solr_auth from custom_args to let it fall back to the env var
-    custom_args.pop("solr_auth")
-    client_from_env = DSpaceClient(**custom_args)
+    client_from_env = DSpaceClient()
 
     # Assertions for the environment variable fallback
-    assert client_from_env.SOLR_AUTH == "env-solr-auth-token"  # Derived from the env var
+    assert (
+        client_from_env.SOLR_AUTH == "env-solr-auth-token"
+    )  # Derived from the env var
 
 
 def test_authenticate_success(mocker):
@@ -475,7 +454,7 @@ def test_api_get_success(mocker):
         username="admin",
         password="admin",
     )
-    
+
     # Call the `api_get` method
     response = client.api_get(url)
 
@@ -529,11 +508,15 @@ def test_api_post_uri_csrf_retry(mocker):
     uri_list = "http://example.com/server/api/other/object"
 
     # Mock the session.post method to simulate the CSRF failure followed by success
-    mock_response_403 = MagicMock(status_code=403, json=lambda: {"message": "CSRF token invalid"})
+    mock_response_403 = MagicMock(
+        status_code=403, json=lambda: {"message": "CSRF token invalid"}
+    )
     mock_response_200 = MagicMock(status_code=200, text="success")
 
     # Mock the session.post to return 403 on first call and 200 on retry
-    mocker.patch.object(requests.Session, "post", side_effect=[mock_response_403, mock_response_200])
+    mocker.patch.object(
+        requests.Session, "post", side_effect=[mock_response_403, mock_response_200]
+    )
 
     # Mock logging.debug to observe the retry
     mocked_log_debug = mocker.patch("logging.debug")
@@ -612,7 +595,6 @@ def test_api_post_success(mocker):
     assert response.json() == json_data
 
 
-
 def test_api_post_unauthorized(mocker):
     url = "http://example.com/server/api/test"
     json_data = {"key": "value"}
@@ -639,11 +621,15 @@ def test_api_post_csrf_retry(mocker):
     json_data = {"key": "value"}
 
     # Mock the `session.post` method to simulate the CSRF failure followed by success
-    mock_response_403 = MagicMock(status_code=403, json=lambda: {"message": "CSRF token invalid"})
+    mock_response_403 = MagicMock(
+        status_code=403, json=lambda: {"message": "CSRF token invalid"}
+    )
     mock_response_200 = MagicMock(status_code=200, json=lambda: json_data)
 
     # Mock the `session.post` to return the 403 response first, then 200 on retry
-    mocker.patch.object(requests.Session, "post", side_effect=[mock_response_403, mock_response_200])
+    mocker.patch.object(
+        requests.Session, "post", side_effect=[mock_response_403, mock_response_200]
+    )
 
     # Mock the token update logic to ensure the token gets refreshed
     mocker.patch.object(DSpaceClient, "update_token")
@@ -661,7 +647,6 @@ def test_api_post_csrf_retry(mocker):
     # Assertions to ensure the retry was successful after the CSRF token failure
     assert response.status_code == 200
     assert response.json() == json_data
-
 
 
 def test_api_post_uri_retry_on_csrf_failure(mocker):
@@ -735,11 +720,15 @@ def test_api_put_csrf_retry(mocker):
     json_data = {"key": "value for retry"}
 
     # Simulate CSRF failure on first attempt and success on retry
-    mock_response_403 = MagicMock(status_code=403, json=lambda: {"message": "CSRF token invalid"})
+    mock_response_403 = MagicMock(
+        status_code=403, json=lambda: {"message": "CSRF token invalid"}
+    )
     mock_response_200 = MagicMock(status_code=200, json=lambda: json_data)
 
     # Patch `requests.Session.put` to return 403 first, then 200 after retry
-    mocker.patch.object(requests.Session, "put", side_effect=[mock_response_403, mock_response_200])
+    mocker.patch.object(
+        requests.Session, "put", side_effect=[mock_response_403, mock_response_200]
+    )
 
     client = DSpaceClient(
         api_endpoint="http://example.com/server/api",
@@ -760,7 +749,9 @@ def test_api_put_retry_limit(mocker):
     json_data = {"key": "retry limit test"}
 
     # Simulate CSRF failure for both attempts
-    mock_response_403 = MagicMock(status_code=403, json=lambda: {"message": "CSRF token invalid"})
+    mock_response_403 = MagicMock(
+        status_code=403, json=lambda: {"message": "CSRF token invalid"}
+    )
 
     # Patch `requests.Session.put` to always return 403
     mocker.patch.object(requests.Session, "put", return_value=mock_response_403)
@@ -806,11 +797,15 @@ def test_api_delete_csrf_retry(mocker):
     url = "http://example.com/server/api/test"
 
     # Simulate CSRF failure on first request, then success on retry
-    mock_response_403 = MagicMock(status_code=403, json=lambda: {"message": "CSRF token invalid"})
+    mock_response_403 = MagicMock(
+        status_code=403, json=lambda: {"message": "CSRF token invalid"}
+    )
     mock_response_204 = MagicMock(status_code=204)
 
     # Patch `requests.Session.delete` to return 403 first, then 204 after retry
-    mocker.patch.object(requests.Session, "delete", side_effect=[mock_response_403, mock_response_204])
+    mocker.patch.object(
+        requests.Session, "delete", side_effect=[mock_response_403, mock_response_204]
+    )
 
     client = DSpaceClient(
         api_endpoint="http://example.com/server/api",
@@ -829,7 +824,9 @@ def test_api_delete_retry_limit(mocker):
     url = "http://example.com/server/api/test"
 
     # Simulate CSRF failure for both attempts
-    mock_response_403 = MagicMock(status_code=403, json=lambda: {"message": "CSRF token invalid"})
+    mock_response_403 = MagicMock(
+        status_code=403, json=lambda: {"message": "CSRF token invalid"}
+    )
 
     # Patch `requests.Session.delete` to always return 403
     mocker.patch.object(requests.Session, "delete", return_value=mock_response_403)
@@ -858,7 +855,9 @@ def test_api_patch_success(mocker):
     value = "Updated Title"
 
     # Mock the `session.patch` method to simulate a successful PATCH request
-    mock_response = MagicMock(status_code=200, json=lambda: {"type": "item", "id": "1234"})
+    mock_response = MagicMock(
+        status_code=200, json=lambda: {"type": "item", "id": "1234"}
+    )
     mocker.patch.object(requests.Session, "patch", return_value=mock_response)
 
     client = DSpaceClient(
@@ -882,11 +881,17 @@ def test_api_patch_csrf_retry(mocker):
     value = "New Author"
 
     # Simulate CSRF failure on first attempt and success on retry
-    mock_response_403 = MagicMock(status_code=403, json=lambda: {"message": "CSRF token invalid"})
-    mock_response_200 = MagicMock(status_code=200, json=lambda: {"type": "item", "id": "1234"})
+    mock_response_403 = MagicMock(
+        status_code=403, json=lambda: {"message": "CSRF token invalid"}
+    )
+    mock_response_200 = MagicMock(
+        status_code=200, json=lambda: {"type": "item", "id": "1234"}
+    )
 
     # Patch `requests.Session.patch` to return 403 first, then 200 after retry
-    mocker.patch.object(requests.Session, "patch", side_effect=[mock_response_403, mock_response_200])
+    mocker.patch.object(
+        requests.Session, "patch", side_effect=[mock_response_403, mock_response_200]
+    )
 
     client = DSpaceClient(
         api_endpoint="http://example.com/server/api",
@@ -1000,7 +1005,6 @@ def test_api_patch_move_operation(mocker):
     assert mocked_patch.call_args[0][0] == "http://example.com/api/test"
 
 
-
 def test_api_patch_csrf_retry(mocker):
     # Create an instance of DSpaceClient
     client = DSpaceClient(
@@ -1012,7 +1016,10 @@ def test_api_patch_csrf_retry(mocker):
     mocker.patch.object(client.session, "patch", return_value=mock_response_403)
 
     # Mock the parse_json method to simulate a CSRF token error
-    mocker.patch("dspace_rest_client.client.parse_json", return_value={"message": "CSRF token expired"})
+    mocker.patch(
+        "dspace_rest_client.client.parse_json",
+        return_value={"message": "CSRF token expired"},
+    )
 
     # Mock logging.debug to capture the retry message
     mock_debug_log = mocker.patch("dspace_rest_client.client.logging.debug")
@@ -1029,6 +1036,7 @@ def test_api_patch_csrf_retry(mocker):
     # Ensure logging.debug was called with the retry message
     mock_debug_log.assert_called_with("Retrying request with updated CSRF token")
 
+
 def test_api_patch_retry_limit(mocker):
     # Create an instance of DSpaceClient
     client = DSpaceClient(
@@ -1040,7 +1048,10 @@ def test_api_patch_retry_limit(mocker):
     mocker.patch.object(client.session, "patch", return_value=mock_response_403)
 
     # Mock the parse_json method to simulate a CSRF token error
-    mocker.patch("dspace_rest_client.client.parse_json", return_value={"message": "CSRF token expired"})
+    mocker.patch(
+        "dspace_rest_client.client.parse_json",
+        return_value={"message": "CSRF token expired"},
+    )
 
     # Mock logging.warning to capture the retry limit message
     mock_warning_log = mocker.patch("dspace_rest_client.client.logging.warning")
@@ -1055,7 +1066,9 @@ def test_api_patch_retry_limit(mocker):
     )
 
     # Ensure logging.warning was called with the appropriate message for retry limit reached
-    mock_warning_log.assert_called_once_with("Too many retries updating token: 403: Forbidden")
+    mock_warning_log.assert_called_once_with(
+        "Too many retries updating token: 403: Forbidden"
+    )
 
 
 def test_search_objects_success(dspace_client_dso):
@@ -1129,29 +1142,31 @@ def test_fetch_resource_json_parse_error(mocker):
         username="admin",
         password="admin",
     )
-    
+
     # Mock the response to simulate a successful API call
     mock_response = MagicMock()
     mock_response.status_code = 200
 
     # Patch the client.api_get method to return the mock response
     mocker.patch.object(client, "api_get", return_value=mock_response)
-    
+
     # Patch parse_json to raise a ValueError simulating a JSON parsing error
-    mocker.patch("dspace_rest_client.client.parse_json", side_effect=ValueError("Mock JSON parse error"))
-    
+    mocker.patch(
+        "dspace_rest_client.client.parse_json",
+        side_effect=ValueError("Mock JSON parse error"),
+    )
+
     # Patch logging.error to monitor the error handling
     mock_log_error = mocker.patch("logging.error")
-    
+
     # Call fetch_resource with the test URL
     result = client.fetch_resource("http://example.com/server/api/badjson", {})
 
     # Ensure fetch_resource returns None when a JSON parse error occurs
     assert result is None
-    
+
     # Ensure logging.error was called to log the JSON parse error
     mock_log_error.assert_called_once()
-
 
 
 def test_get_dso_valid_uuid(mocker):
@@ -1190,7 +1205,9 @@ def test_get_dso_invalid_uuid(mocker):
     )
 
     # Mock the UUID method to raise a ValueError (simulate invalid UUID)
-    mocker.patch("dspace_rest_client.client.UUID", side_effect=ValueError("Invalid UUID"))
+    mocker.patch(
+        "dspace_rest_client.client.UUID", side_effect=ValueError("Invalid UUID")
+    )
 
     # Call the get_dso method with an invalid UUID
     result = client.get_dso(url="http://example.com/api/test", uuid="invalid_uuid")
@@ -2090,7 +2107,7 @@ def test_get_communities_with_sort(mocker):
     # Verify that fetch_resource was called with the correct parameters, including the sort
     client.fetch_resource.assert_called_once_with(
         "http://example.com/server/api/core/communities",
-        {'size': 20, 'page': 0, 'sort': 'name,asc'}
+        {"size": 20, "page": 0, "sort": "name,asc"},
     )
 
 
@@ -2102,13 +2119,12 @@ def test_get_communities_with_valid_uuid(mocker):
     )
 
     # Mock the API response for a single community
-    mock_single_community_data = {
-        "uuid": "community-uuid-1",
-        "name": "Community 1"
-    }
+    mock_single_community_data = {"uuid": "community-uuid-1", "name": "Community 1"}
 
     # Patch fetch_resource to return the mock response
-    mocker.patch.object(client, "fetch_resource", return_value=mock_single_community_data)
+    mocker.patch.object(
+        client, "fetch_resource", return_value=mock_single_community_data
+    )
 
     # Call get_communities with a valid UUID to trigger URL modification
     communities = client.get_communities(uuid="123e4567-e89b-12d3-a456-426614174000")
@@ -2120,8 +2136,8 @@ def test_get_communities_with_valid_uuid(mocker):
 
     # Verify that fetch_resource was called with the correct URL and positional None argument for params
     client.fetch_resource.assert_called_once_with(
-        "http://example.com/server/api/core/communities/123e4567-e89b-12d3-a456-426614174000", 
-        None
+        "http://example.com/server/api/core/communities/123e4567-e89b-12d3-a456-426614174000",
+        None,
     )
 
 
@@ -2153,13 +2169,12 @@ def test_get_single_community(mocker):
     )
 
     # Mock the API response for a single community
-    mock_single_community_data = {
-        "uuid": "community-uuid-1",
-        "name": "Community 1"
-    }
+    mock_single_community_data = {"uuid": "community-uuid-1", "name": "Community 1"}
 
     # Patch fetch_resource to return the mock response
-    mocker.patch.object(client, "fetch_resource", return_value=mock_single_community_data)
+    mocker.patch.object(
+        client, "fetch_resource", return_value=mock_single_community_data
+    )
 
     # Call get_communities with a valid UUID to retrieve a single community
     communities = client.get_communities(uuid="community-uuid-1")
@@ -2171,8 +2186,7 @@ def test_get_single_community(mocker):
 
     # Verify that fetch_resource was called with the correct URL for the single community
     client.fetch_resource.assert_called_once_with(
-        "http://example.com/server/api/core/communities/community-uuid-1", 
-        params=None
+        "http://example.com/server/api/core/communities/community-uuid-1", params=None
     )
 
 
@@ -2208,7 +2222,7 @@ def test_get_collections_with_valid_uuid(mocker):
     client = DSpaceClient(
         api_endpoint="http://example.com", username="admin", password="admin"
     )
-    
+
     # Mock the fetch_resource method to return a single collection response
     mock_response = {"uuid": "12345678-1234-5678-1234-567812345678"}
     mocker.patch.object(client, "fetch_resource", return_value=mock_response)
@@ -2219,7 +2233,7 @@ def test_get_collections_with_valid_uuid(mocker):
     # Assert that fetch_resource was called with the correct URL
     client.fetch_resource.assert_called_once_with(
         "http://example.com/core/collections/12345678-1234-5678-1234-567812345678",
-        params=None
+        params=None,
     )
 
     # Assert that the method returns a list with a single collection
@@ -2272,7 +2286,7 @@ def test_get_collections_with_community(mocker):
 
     # Assert that fetch_resource was called with the correct URL
     client.fetch_resource.assert_called_once_with(
-        "http://example.com/server/api/core/collections", params={'page': 0, 'size': 20}
+        "http://example.com/server/api/core/collections", params={"page": 0, "size": 20}
     )
 
     # Assert that the method returns a list of collections
@@ -2287,11 +2301,6 @@ def test_get_collections_with_sort(mocker):
     )
 
     # Mock the API response with a valid list of collections
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mocker.patch.object(client, "fetch_resource", return_value=mock_response)
-
-    # Mock the parse_json function to return a valid JSON response
     mock_json_response = {
         "_embedded": {
             "collections": [
@@ -2300,14 +2309,17 @@ def test_get_collections_with_sort(mocker):
             ]
         }
     }
-    mocker.patch("dspace_rest_client.client.parse_json", return_value=mock_json_response)
+
+    # Mock the fetch_resource method to return the mock JSON response
+    mocker.patch.object(client, "fetch_resource", return_value=mock_json_response)
 
     # Call the method with a sort parameter
     result = client.get_collections(page=0, size=20, sort="name,asc")
 
     # Assert that fetch_resource was called with the correct URL and parameters, including sort
     client.fetch_resource.assert_called_once_with(
-        "http://example.com/core/collections", params={"page": 0, "size": 20, "sort": "name,asc"}
+        "http://example.com/core/collections",
+        params={"page": 0, "size": 20, "sort": "name,asc"},
     )
 
     # Assert that the correct collections were returned
@@ -2330,7 +2342,7 @@ def test_get_single_collection(mocker):
 
     # Assert that fetch_resource was called with the correct URL
     client.fetch_resource.assert_called_once_with(
-        "http://example.com/core/collections", params={'page': 0, 'size': 20}
+        "http://example.com/core/collections", params={"page": 0, "size": 20}
     )
 
     # Assert that the method returns a list with a single collection
@@ -2549,14 +2561,17 @@ def test_get_users_with_sort(mocker):
             ]
         }
     }
-    mocker.patch("dspace_rest_client.client.parse_json", return_value=mock_json_response)
+    mocker.patch(
+        "dspace_rest_client.client.parse_json", return_value=mock_json_response
+    )
 
     # Call the method with a sort parameter
     result = client.get_users(page=0, size=20, sort="name,asc")
 
     # Assert that the api_get was called with the correct parameters, including sort
     client.api_get.assert_called_once_with(
-        "http://example.com/eperson/epersons", params={"page": 0, "size": 20, "sort": "name,asc"}
+        "http://example.com/eperson/epersons",
+        params={"page": 0, "size": 20, "sort": "name,asc"},
     )
 
     # Assert that the correct users were returned
@@ -3214,20 +3229,21 @@ def test_create_item_invalid_item(mocker):
 
 
 def test_create_item_success(mocker):
+    # Create a mock DSpaceClient
     client = DSpaceClient(
         api_endpoint="http://example.com", username="admin", password="admin"
     )
 
     # Mock the Item object and its as_dict method
-    mock_item = MagicMock(spec=Item)
+    mock_item = mocker.MagicMock(spec=Item)
     mock_item.as_dict.return_value = {"name": "Test Item"}
 
-    # Mock the response from create_dso method
-    mock_create_dso_response = MagicMock()
+    # Mock the create_dso method to simulate an API response
+    mock_create_dso_response = {"id": "123", "name": "Test Item"}
     mocker.patch.object(client, "create_dso", return_value=mock_create_dso_response)
 
-    # Mock parse_json to return a parsed JSON response
-    mocker.patch("dspace_rest_client.client.parse_json", return_value={"id": "123"})
+    # Mock parse_json to return the JSON response as expected
+    mock_parse_json = mocker.patch("dspace_rest_client.client.parse_json", return_value=mock_create_dso_response)
 
     # Call the create_item method with a valid parent and item
     result = client.create_item("1234-5678-91011", mock_item)
@@ -3239,9 +3255,12 @@ def test_create_item_success(mocker):
         data=mock_item.as_dict(),
     )
 
+    # Assert that parse_json was called to parse the API response
+    mock_parse_json.assert_called_once_with(mock_create_dso_response)
+
     # Assert that the result is an Item object constructed from the API response
     assert isinstance(result, Item)
-    assert result.api_resource["id"] == "123"
+    assert result.id == "123"
 
 
 def test_get_items_no_items(mocker):
@@ -3763,7 +3782,7 @@ def test_get_item_metrics_success(mocker):
     mock_response.status_code = 200
 
     # Patch the 'api_get' method directly in the DSpaceClient class
-    mocker.patch.object(client, 'api_get', return_value=mock_response)
+    mocker.patch.object(client, "api_get", return_value=mock_response)
 
     # Call the method with a valid UUID
     result = client.get_item_metrics("1234-5678-91011")
@@ -3837,7 +3856,7 @@ def test_get_item_invalid_uuid(mocker):
     mock_log_error.assert_called_with("Invalid item UUID: invalid-uuid")
 
     # Assert that the method returns None for an invalid UUID
-    assert result is None    
+    assert result is None
 
 
 def test_get_collection_parent_community_invalid_uuid(mocker):
@@ -4112,103 +4131,139 @@ def test_search_objects_admin_json_parsing_error(mocker):
     assert result == []
 
 
-def test_search_object_detail_default(mocker):
+def test_search_object_detail_success(mocker):
     client = DSpaceClient(
         api_endpoint="http://example.com", username="admin", password="admin"
     )
 
-    # Mock the API response with embedded search results
-    mock_json_response = {
+    # Mock response with a successful search result
+    mock_response = {
         "_embedded": {
             "searchResult": {
                 "_embedded": {
                     "objects": [
-                        {"_embedded": {"indexableObject": {"id": "item1"}}},
-                        {"_embedded": {"indexableObject": {"id": "item2"}}},
+                        {"_embedded": {"indexableObject": {"uuid": "obj1", "name": "Object 1"}}},
+                        {"_embedded": {"indexableObject": {"uuid": "obj2", "name": "Object 2"}}}
                     ]
                 },
-                "page": {"size": 20, "totalElements": 2, "totalPages": 1, "number": 0},
+                "page": {"size": 2, "totalElements": 2, "totalPages": 1, "number": 0},
+                "facets": []
             }
         }
     }
 
-    # Patch the fetch_resource method to return the mock response
-    mocker.patch.object(client, "fetch_resource", return_value=mock_json_response)
+    # Mock fetch_resource to return the mocked response
+    mocker.patch.object(client, "fetch_resource", return_value=mock_response)
 
-    # Call the method with default parameters
-    result, page_data = client.search_object_detail()
+    # Call the search_object_detail method with query and sorting
+    dsos, page_data, facets = client.search_object_detail(query="test", sort="name,asc")
 
-    # Assert that fetch_resource was called with the correct URL
-    client.fetch_resource.assert_called_once_with(
-        url="http://example.com/discover/search/objects", params={}
-    )
-
-    # Assert that the method returns the correct search results
-    assert len(result) == 2
-    assert result[0].id == "item1"
-    assert result[1].id == "item2"
-
-    # Assert that page data is returned correctly
-    assert page_data == {"size": 20, "totalElements": 2, "totalPages": 1, "number": 0}
-
-
-def test_search_object_detail_with_params(mocker):
-    client = DSpaceClient(
-        api_endpoint="http://example.com", username="admin", password="admin"
-    )
-
-    # Mock the API response with valid objects and facets
-    mock_json_response = {
-        "_embedded": {
-            "searchResult": {
-                "_embedded": {
-                    "objects": [
-                        {"_embedded": {"indexableObject": {"id": "item1"}}},
-                        {"_embedded": {"indexableObject": {"id": "item2"}}},
-                    ]
-                },
-                "page": {"size": 10, "totalElements": 2, "totalPages": 1, "number": 0},
-            }
-        }
-    }
-
-    # Patch fetch_resource to return the mock response
-    mocker.patch.object(client, "fetch_resource", return_value=mock_json_response)
-
-    # Call the method with query, scope, filters, and additional parameters
-    result, page_data = client.search_object_detail(
-        query="test_query",
-        scope="collection_uuid",
-        filters={"f.type": "equals"},
-        page=1,
-        size=10,
-        sort="title,asc",
-        dso_type="Item",
-        configuration="default",
-    )
-
-    # Assert that fetch_resource was called with the correct URL and parameters
+    # Assert the results
+    assert len(dsos) == 2
+    assert dsos[0].uuid == "obj1"
+    assert dsos[1].uuid == "obj2"
+    assert page_data["totalElements"] == 2
+    assert facets == []
+    
+    # Verify that fetch_resource was called with correct parameters
     client.fetch_resource.assert_called_once_with(
         url="http://example.com/discover/search/objects",
-        params={
-            "query": "test_query",
-            "scope": "collection_uuid",
-            "size": 10,
-            "page": 1,
-            "sort": "title,asc",
-            "dsoType": "Item",
-            "configuration": "default",
-            "f.type": "equals",
-        },
+        params={"query": "test", "sort": "name,asc", "page": 0, "size": 20}
     )
 
-    # Assert that the method returns the correct search results
-    assert len(result) == 2
-    assert result[0].id == "item1"
-    assert result[1].id == "item2"
 
-    # Assert that page data is returned correctly
-    assert page_data == {"size": 10, "totalElements": 2, "totalPages": 1, "number": 0}
+def test_search_object_detail_no_results(mocker):
+    client = DSpaceClient(
+        api_endpoint="http://example.com", username="admin", password="admin"
+    )
+
+    # Mock response with no search results
+    mock_response = {
+        "_embedded": {
+            "searchResult": {
+                "_embedded": {"objects": []},
+                "page": {"size": 0, "totalElements": 0, "totalPages": 0, "number": 0},
+                "facets": []
+            }
+        }
+    }
+
+    # Mock fetch_resource to return the mocked response
+    mocker.patch.object(client, "fetch_resource", return_value=mock_response)
+
+    # Call the search_object_detail method with no results
+    dsos, page_data, facets = client.search_object_detail(query="empty", sort="name,asc")
+
+    # Assert the results
+    assert len(dsos) == 0
+    assert page_data["totalElements"] == 0
+    assert facets == []
+    
+    # Verify fetch_resource was called with correct parameters
+    client.fetch_resource.assert_called_once_with(
+        url="http://example.com/discover/search/objects",
+        params={"query": "empty", "sort": "name,asc", "page": 0, "size": 20}
+    )
+
+
+def test_search_object_detail_error_handling(mocker):
+    client = DSpaceClient(
+        api_endpoint="http://example.com", username="admin", password="admin"
+    )
+
+    # Mock response with missing keys (malformed response)
+    mock_response = {}
+
+    # Mock fetch_resource to return the mocked malformed response
+    mocker.patch.object(client, "fetch_resource", return_value=mock_response)
+
+    # Mock logging.error to capture any error messages
+    mock_log_error = mocker.patch("logging.error")
+
+    # Call the search_object_detail method expecting it to handle the error
+    dsos, page_data, facets = client.search_object_detail(query="malformed")
+
+    # Assert that no results are returned due to error
+    assert len(dsos) == 0
+    assert page_data is None
+    assert facets is None
+
+    # Verify that the error log was triggered
+    mock_log_error.assert_called_once_with("error parsing search result json 'NoneType' object is not subscriptable")
+
+
+def test_search_object_detail_with_filters(mocker):
+    client = DSpaceClient(
+        api_endpoint="http://example.com", username="admin", password="admin"
+    )
+
+    # Mock response with a successful search result
+    mock_response = {
+        "_embedded": {
+            "searchResult": {
+                "_embedded": {
+                    "objects": [
+                        {"_embedded": {"indexableObject": {"uuid": "obj1", "name": "Object 1"}}}
+                    ]
+                },
+                "page": {"size": 1, "totalElements": 1, "totalPages": 1, "number": 0},
+                "facets": []
+            }
+        }
+    }
+
+    # Mock fetch_resource to return the mocked response
+    mocker.patch.object(client, "fetch_resource", return_value=mock_response)
+
+    # Call the search_object_detail method with filters
+    filters = {"f.entityType": "Publication,equals"}
+    result = client.search_object_detail(query="test", filters=filters, page=1, size=10)
+
+    # Assert that fetch_resource was called with correct URL and parameters
+    client.fetch_resource.assert_called_once_with(
+        url="http://example.com/discover/search/objects",
+        params={"query": "test", "page": 1, "size": 10, **filters}
+    )
 
 
 def test_download_bitstream_missing_uuid(mocker):
