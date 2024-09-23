@@ -193,6 +193,7 @@ def test_dspace_client_initialization_defaults(monkeypatch, mocker):
 
 
 def test_dspace_client_initialization_custom_args(monkeypatch, mocker):
+    # TODO: Add test for custom arguments
     # Mock environment variables as a fallback
     monkeypatch.setenv("DSPACE_API_ENDPOINT", "http://fallback:8080/server/api")
     monkeypatch.setenv("DSPACE_API_USERNAME", "fallbackUser")
