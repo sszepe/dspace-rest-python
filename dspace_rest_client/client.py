@@ -795,14 +795,18 @@ class DSpaceClient:
         """
         # TODO: It is probably wise to allow the parent UUID to be simply passed as an alternative to having the full
         #  python object as constructed by this REST client, for more flexible usage.
-        if parent is None:
-            return None
-        url = f"{self.API_ENDPOINT}/core/items/{parent.uuid}/bundles"
-        return Bundle(
-            api_resource=parse_json(
-                self.api_post(url, params=None, json={"name": name, "metadata": {}})
+        try:
+            if parent is None:
+                return None
+            url = f"{self.API_ENDPOINT}/core/items/{parent.uuid}/bundles"
+            return Bundle(
+                api_resource=parse_json(
+                    self.api_post(url, params=None, json={"name": name, "metadata": {}})
+                )
             )
-        )
+        except ValueError as err:
+            logging.error(f"error creating bundle: {err}")
+            return None
 
     # PAGINATION
     def get_bitstreams(self, uuid=None, bundle=None, page=0, size=20, sort=None):
