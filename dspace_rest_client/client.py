@@ -1530,6 +1530,7 @@ class DSpaceClient:
         filters=None,
         fields=None,
         facets=None,
+        sort=None,
         minfacests=0,
         start=0,
         rows=999999999,
@@ -1540,6 +1541,7 @@ class DSpaceClient:
         @param filters:     List of filter queries
         @param fields:      List of fields to return
         @param facets:      List of facet fields
+        @param sort:        Sort string
         @param minfacests:  Minimum count for facets
         @param start:       Start index
         @param rows:        Number of rows to return
@@ -1551,6 +1553,8 @@ class DSpaceClient:
             filters = []
         if facets is None:
             facets = []
+        if sort is None:
+            sort = "score desc"
         return self.solr.search(
             query,
             fq=filters,
@@ -1560,6 +1564,7 @@ class DSpaceClient:
             **{"fl": ",".join(fields)},
             **{"facet.mincount": minfacests},
             **{"facet.field": facets},
+            sort=sort,
         )
 
     def get_config(self, key):
